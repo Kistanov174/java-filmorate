@@ -1,8 +1,15 @@
+.mvn
+.github
+checkstyle.xml
+mvnw.cmd
+mvnw
 HELP.md
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+
+<<<<<<< HEAD
+=======
+.mvn
+>>>>>>> parent of c5ce356... feat: Реализовать REST-контроллеры UserControllre, FilmController. Обеспечить валидацию данных, логирование и тестирование
 
 ### STS ###
 .apt_generated
