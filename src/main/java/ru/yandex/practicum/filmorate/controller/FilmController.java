@@ -46,7 +46,7 @@ public class FilmController {
     }
 
     private void doValidation(Film film) {
-        if (film.getName().isBlank() ) {
+        if (film.getName().isBlank()) {
             log.info("Пустое имя фильма");
             throw new ValidationException("Пустое имя фильма в запросе " +
                     FilmController.class.getSimpleName());
