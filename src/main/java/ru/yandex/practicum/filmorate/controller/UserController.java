@@ -47,6 +47,10 @@ public class UserController {
     @Validated({User.Marker.OnUpdate.class})
     public User updateUser(@Valid @RequestBody User user) {
         log.info("Запрос на обновление пользователя");
+        if (!users.containsKey(user.getId())) {
+            log.info("Несуществующий пользователь");
+            throw new ValidationException("Такого пользователтя нет" + UserController.class.getSimpleName());
+        }
         doValidation(user);
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());

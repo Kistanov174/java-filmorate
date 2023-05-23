@@ -39,6 +39,10 @@ public class FilmController {
     @PutMapping("/films")
     public Film update(@Valid @RequestBody Film film) {
         log.info("Запрос на обновление фильма");
+        if (!films.containsKey(film.getId())) {
+            log.info("Несуществующий фильм");
+            throw new ValidationException("Такого фильма нет" + FilmController.class.getSimpleName());
+        }
         doValidation(film);
         films.put(film.getId(), film);
         log.info("Добавлен фильм " + film);
