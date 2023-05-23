@@ -29,6 +29,7 @@ public class UserController {
     }
 
     @PostMapping("/users")
+    @Validated({User.Marker.OnCreate.class})
     public User createUser(@Valid @RequestBody User user) {
         log.info("Запрос на добавление нового пользователя");
         doValidation(user);
@@ -43,6 +44,7 @@ public class UserController {
     }
 
     @PutMapping("/users")
+    @Validated({User.Marker.OnUpdate.class})
     public User updateUser(@Valid @RequestBody User user) {
         log.info("Запрос на обновление пользователя");
         doValidation(user);
