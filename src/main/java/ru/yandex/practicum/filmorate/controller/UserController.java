@@ -26,7 +26,7 @@ public class UserController {
         return new ArrayList<>(users.values());
     }
 
-    @PostMapping("/user")
+    @PostMapping("/users")
     public User createUser(@Valid @RequestBody User user) {
         log.info("Запрос на добавление нового пользователя");
         doValidation(user);
@@ -40,7 +40,7 @@ public class UserController {
         return user;
     }
 
-    @PutMapping("/user")
+    @PutMapping("/users")
     public User updateUser(@Valid @RequestBody User user) {
         log.info("Запрос на обновление пользователя");
         doValidation(user);

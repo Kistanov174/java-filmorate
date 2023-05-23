@@ -26,7 +26,7 @@ public class FilmController {
         return new ArrayList<>(films.values());
     }
 
-    @PostMapping("/film")
+    @PostMapping("/films")
     public Film create(@Valid @RequestBody Film film) {
         log.info("Запрос на добавление нового фильма");
         doValidation(film);
@@ -36,7 +36,7 @@ public class FilmController {
         return film;
     }
 
-    @PutMapping("/film")
+    @PutMapping("/films")
     public Film update(@Valid @RequestBody Film film) {
         log.info("Запрос на обновление фильма");
         doValidation(film);
