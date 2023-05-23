@@ -54,7 +54,7 @@ public class UserController {
     }
 
     private void doValidation(User user) {
-        if (user.getEmail().isBlank() ) {
+        if (user.getEmail().isBlank()) {
             log.info("Пустой email-адрес");
             throw new ValidationException("Пустой email-адрес в запросе " + UserController.class.getSimpleName());
         }
