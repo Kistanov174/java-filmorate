@@ -6,11 +6,15 @@ import ru.yandex.practicum.filmorate.annotation.Birthday;
 import ru.yandex.practicum.filmorate.annotation.Login;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
 public class User {
+    @Null(groups = Marker.OnCreate.class)
+    @NotNull(groups = Marker.OnUpdate.class)
     private Integer id;
     @NotBlank
     @Email
@@ -21,4 +25,9 @@ public class User {
     private String name;
     @Birthday
     private LocalDate birthday;
+
+    public interface Marker {
+        interface OnCreate {}
+        interface OnUpdate {}
+    }
 }
