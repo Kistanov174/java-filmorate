@@ -18,8 +18,8 @@ public class Film {
     private String description;
     @ReleaseDate
     private LocalDate releaseDate;
-    @DurationMin(minutes = 0)
-    private Duration duration = Duration.ofSeconds(0);
+    @Min(0)
+    private Integer duration;
 }
 
 
