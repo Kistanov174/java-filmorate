@@ -27,7 +27,9 @@ public class User {
     private LocalDate birthday;
 
     public interface Marker {
+
         interface OnCreate {}
+
         interface OnUpdate {}
     }
 }
