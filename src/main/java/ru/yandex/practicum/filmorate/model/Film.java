@@ -26,7 +26,7 @@ public class Film {
     @DurationFormat(DurationStyle.SIMPLE)
     @DurationMin(minutes = 0)
     private Duration duration = Duration.ofMinutes(0);
-    private Integer rate;
+    private int rate;
 }
 
 

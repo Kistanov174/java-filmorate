@@ -31,7 +31,7 @@ public class FilmController {
     }
 
     @PostMapping("/films")
-    public Film create(@Valid @DurationUnit(ChronoUnit.MINUTES) @DurationFormat(DurationStyle.SIMPLE) @RequestBody Film film) {
+    public Film create(@Valid @RequestBody Film film) {
         log.info("Запрос на добавление нового фильма");
         doValidation(film);
         film.setId(generateId());
