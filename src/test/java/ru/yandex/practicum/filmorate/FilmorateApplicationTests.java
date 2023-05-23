@@ -24,7 +24,7 @@ class FilmorateApplicationTests {
 	@BeforeEach
 	public void beforeEach() {
 		film = new Film(null, "Grimm", "Fantasy", LocalDate.of(2022, 9, 7),
-				Duration.ofMinutes(0));
+				Duration.ofMinutes(0), 0);
 		user = new User(null,"aleksey.kistanov@yandex.ru", "leksa", "Миша", null);
 	}
 
