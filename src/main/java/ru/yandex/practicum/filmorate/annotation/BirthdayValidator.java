@@ -1,7 +1,5 @@
 package ru.yandex.practicum.filmorate.annotation;
 
-import ru.yandex.practicum.filmorate.exception.ValidationException;
-
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.time.LocalDate;
