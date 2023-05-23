@@ -112,9 +112,9 @@ class FilmorateApplicationTests {
 		assertEquals("Отрицательная продолжительность в запросе FilmController", ex.getMessage());
 		film.setDuration(0);
 		Film newFilm = filmController.create(film);
-		assertEquals(newFilm.getDuration(), Duration.ofMinutes(0));
+		assertEquals(newFilm.getDuration(), 0);
 		film.setDuration(59);
 		newFilm = filmController.update(film);
-		assertEquals(newFilm.getDuration(), Duration.ofMinutes(59));
+		assertEquals(newFilm.getDuration(), 59);
 	}
 }
