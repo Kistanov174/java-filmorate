@@ -22,7 +22,6 @@ public class Film {
     private String description;
     @ReleaseDate
     private LocalDate releaseDate;
-
     @DurationUnit(ChronoUnit.MINUTES)
     @DurationFormat(DurationStyle.SIMPLE)
     @DurationMin(minutes = 0)
