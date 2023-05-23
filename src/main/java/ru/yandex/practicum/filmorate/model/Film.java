@@ -2,9 +2,15 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.hibernate.validator.constraints.time.DurationMin;
+import org.springframework.boot.convert.DurationFormat;
+import org.springframework.boot.convert.DurationStyle;
+import org.springframework.boot.convert.DurationUnit;
 import ru.yandex.practicum.filmorate.annotation.ReleaseDate;
 import javax.validation.constraints.*;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Data
 @AllArgsConstructor
@@ -16,8 +22,11 @@ public class Film {
     private String description;
     @ReleaseDate
     private LocalDate releaseDate;
-    @Min(0)
-    private Integer duration;
+
+    @DurationUnit(ChronoUnit.MINUTES)
+    @DurationFormat(DurationStyle.SIMPLE)
+    @DurationMin(minutes = 0)
+    private Duration duration = Duration.ofMinutes(0);
 }
 
 

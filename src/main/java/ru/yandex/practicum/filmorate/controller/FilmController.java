@@ -1,11 +1,15 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.convert.DurationFormat;
+import org.springframework.boot.convert.DurationStyle;
+import org.springframework.boot.convert.DurationUnit;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import javax.validation.Valid;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +31,7 @@ public class FilmController {
     }
 
     @PostMapping("/films")
-    public Film create(@Valid @RequestBody Film film) {
+    public Film create(@Valid @DurationUnit(ChronoUnit.MINUTES) @DurationFormat(DurationStyle.SIMPLE) @RequestBody Film film) {
         log.info("Запрос на добавление нового фильма");
         doValidation(film);
         film.setId(generateId());
@@ -62,7 +66,7 @@ public class FilmController {
             throw new ValidationException("Слишком старая дата релиза в запросе " +
                     FilmController.class.getSimpleName());
         }
-        if (film.getDuration() != null && film.getDuration() < 0) {
+        if (film.getDuration() != null && film.getDuration().toMinutes() < 0) {
             log.info("Отрицательная продолжительность фильма");
             throw new ValidationException("Отрицательная продолжительность в запросе " +
                     FilmController.class.getSimpleName());
