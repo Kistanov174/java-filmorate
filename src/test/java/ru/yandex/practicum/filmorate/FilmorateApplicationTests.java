@@ -24,7 +24,7 @@ class FilmorateApplicationTests {
 	@BeforeEach
 	public void beforeEach() {
 		film = new Film(null, "Grimm", "Fantasy", LocalDate.of(2022, 9, 7),
-				Duration.ofMinutes(0), 0);
+				0, 0);
 		user = new User(null,"aleksey.kistanov@yandex.ru", "leksa", "Миша", null);
 	}
 
@@ -107,13 +107,13 @@ class FilmorateApplicationTests {
 	@DisplayName("Проверка валидации поля duration у объекта класса Film")
 	@Test
 	void shouldGetValidationDurationFilmException() {
-		film.setDuration(Duration.ofMinutes(-57));
+		film.setDuration(-57);
 		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.create(film));
 		assertEquals("Отрицательная продолжительность в запросе FilmController", ex.getMessage());
-		film.setDuration(Duration.ofMinutes(0));
+		film.setDuration(0);
 		Film newFilm = filmController.create(film);
 		assertEquals(newFilm.getDuration(), Duration.ofMinutes(0));
-		film.setDuration(Duration.ofMinutes(59));
+		film.setDuration(59);
 		newFilm = filmController.update(film);
 		assertEquals(newFilm.getDuration(), Duration.ofMinutes(59));
 	}

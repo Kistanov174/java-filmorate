@@ -66,7 +66,7 @@ public class FilmController {
             throw new ValidationException("Слишком старая дата релиза в запросе " +
                     FilmController.class.getSimpleName());
         }
-        if (film.getDuration() != null && film.getDuration().toMinutes() < 0) {
+        if (film.getDuration() != null && film.getDuration() < 0) {
             log.info("Отрицательная продолжительность фильма");
             throw new ValidationException("Отрицательная продолжительность в запросе " +
                     FilmController.class.getSimpleName());
