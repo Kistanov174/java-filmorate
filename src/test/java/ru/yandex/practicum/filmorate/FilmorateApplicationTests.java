@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
@@ -17,8 +18,14 @@ import java.time.LocalDate;
 class FilmorateApplicationTests {
 	private Film film;
 	private User user;
-	private final UserController userController = new UserController();
-	private final FilmController filmController = new FilmController();
+	private final UserController userController;
+	private final FilmController filmController;
+
+	@Autowired
+	public FilmorateApplicationTests(UserController userController, FilmController filmController) {
+		this.userController = userController;
+		this.filmController = filmController;
+	}
 
 	@BeforeEach
 	public void beforeEach() {
@@ -27,9 +34,9 @@ class FilmorateApplicationTests {
 		user = new User(null,"aleksey.kistanov@yandex.ru", "leksa", "Миша", null);
 	}
 
-	@DisplayName("Проверка валидации email-адреса у объекта класса User")
 	@Test
-	void shouldGetValidationEmailException() {
+	@DisplayName("Проверка валидации email-адреса у объекта класса User")
+	void shouldGetValidationEmailExceptionWhenEmailHasWrongEmailAddress() {
 		user.setEmail("aleksey.kistanovyandex.ru");
 		ValidationException ex1 = assertThrows(ValidationException.class, () -> userController.createUser(user));
 		assertEquals("Неправильный формат email в запросе UserController", ex1.getMessage());
@@ -38,9 +45,9 @@ class FilmorateApplicationTests {
 		assertEquals("Пустой email-адрес в запросе UserController", ex2.getMessage());
 	}
 
-	@DisplayName("Проверка валидации login у объекта класса User")
 	@Test
-	void shouldGetValidationLoginException() {
+	@DisplayName("Проверка валидации login у объекта класса User")
+	void shouldGetValidationLoginExceptionWhenLoginIsBlank() {
 		user.setLogin("");
 		ValidationException ex1 = assertThrows(ValidationException.class, () -> userController.createUser(user));
 		assertEquals("Пустой login в запросе UserController", ex1.getMessage());
@@ -49,18 +56,18 @@ class FilmorateApplicationTests {
 		assertEquals("Пустой login в запросе UserController", ex2.getMessage());
 	}
 
-	@DisplayName("Проверка замены пустого name на login у объекта класса User")
 	@Test
-	void shouldGetLoginInsteadOfName() {
+	@DisplayName("Проверка замены пустого name на login у объекта класса User")
+	void shouldGetLoginInsteadOfEmptyName() {
 		userController.createUser(user);
 		user.setName("");
 		User updateUser = userController.updateUser(user);
 		assertEquals("leksa", updateUser.getName());
 	}
 
-	@DisplayName("Проверка валидации birthday у объекта класса User")
 	@Test
-	void shouldGetValidationBirthdayException() {
+	@DisplayName("Проверка валидации birthday у объекта класса User")
+	void shouldGetValidationBirthdayExceptionWhenBirthdayIsInFuture() {
 		user.setBirthday(LocalDate.of(2200, 1, 1));
 		ValidationException ex = assertThrows(ValidationException.class, () -> userController.createUser(user));
 		assertEquals("Дата рождения еще не наступила в запросе UserController", ex.getMessage());
@@ -69,9 +76,9 @@ class FilmorateApplicationTests {
 		assertEquals(LocalDate.now(), user.getBirthday(), "User с текущей датой рождения не создался");
 	}
 
-	@DisplayName("Проверка валидации поля name у объекта класса Film")
 	@Test
-	void shouldGetValidationNameFilmException() {
+	@DisplayName("Проверка валидации поля name у объекта класса Film")
+	void shouldGetValidationNameFilmExceptionWhenNameFilmIsBlank() {
 		film.setName("");
 		ValidationException ex1 = assertThrows(ValidationException.class, () -> filmController.create(film));
 		assertEquals("Пустое имя фильма в запросе FilmController", ex1.getMessage());
@@ -80,9 +87,9 @@ class FilmorateApplicationTests {
 		assertEquals("Пустое имя фильма в запросе FilmController", ex2.getMessage());
 	}
 
-	@DisplayName("Проверка валидации поля description у объекта класса Film")
 	@Test
-	void shouldGetValidationDescriptionFilmException() {
+	@DisplayName("Проверка валидации поля description у объекта класса Film")
+	void shouldGetValidationDescriptionFilmExceptionWhenDescriptionIsTooLong() {
 		film.setDescription("Действие происходит в современном Портленде, где детектив из отдела убийств узнаёт, " +
 				"что он является потомком группы охотников, известных как «Гриммы», которые сражаются," +
 				" чтобы сохранить человечество в безопасности от сверхъестественных существ. Узнав о своей судьбе," +
@@ -92,9 +99,9 @@ class FilmorateApplicationTests {
 		assertEquals("Слишком длинное описание фильма в запросе FilmController", ex.getMessage());
 	}
 
-	@DisplayName("Проверка валидации поля releaseDate у объекта класса Film")
 	@Test
-	void shouldGetValidationReleaseDateFilmException() {
+	@DisplayName("Проверка валидации поля releaseDate у объекта класса Film")
+	void shouldGetValidationReleaseDateFilmExceptionWhenReleaseDateIsTooOld() {
 		film.setReleaseDate(LocalDate.of(1894, 12, 28));
 		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.create(film));
 		assertEquals("Слишком старая дата релиза в запросе FilmController", ex.getMessage());
@@ -103,9 +110,9 @@ class FilmorateApplicationTests {
 		assertEquals(newFilm.getReleaseDate(), LocalDate.of(1895, 12, 28));
 	}
 
-	@DisplayName("Проверка валидации поля duration у объекта класса Film")
 	@Test
-	void shouldGetValidationDurationFilmException() {
+	@DisplayName("Проверка валидации поля duration у объекта класса Film")
+	void shouldGetValidationDurationFilmExceptionWhenDurationIsNegative() {
 		film.setDuration(-57);
 		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.create(film));
 		assertEquals("Отрицательная продолжительность в запросе FilmController", ex.getMessage());

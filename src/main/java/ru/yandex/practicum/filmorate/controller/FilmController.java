@@ -1,9 +1,16 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.PutMapping;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.sirvice.Marker;
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -12,9 +19,13 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@RestController
+@Validated
+@RestController("~/ru/yandex/practicum/filmorate/controller/FilmController")
 public class FilmController {
-    Integer count = 1;
+    private Integer count = 1;
+    private static final int OLDEST_RELEASE_YEAR = 1895;
+    private static final int OLDEST_RELEASE_MONTH = 12;
+    private static final int OLDEST_RELEASE_DAY = 28;
     private final Map<Integer, Film> films = new HashMap<>();
 
     private Integer generateId() {
@@ -27,9 +38,11 @@ public class FilmController {
     }
 
     @PostMapping("/films")
+    @Validated({Marker.OnCreate.class})
     public Film create(@Valid @RequestBody Film film) {
         log.info("Запрос на добавление нового фильма");
-        doValidation(film);
+        RequestMethod requestMethod = RequestMethod.POST;
+        doValidation(film, requestMethod);
         film.setId(generateId());
         films.put(film.getId(), film);
         log.info("Добавлен фильм " + film);
@@ -37,19 +50,29 @@ public class FilmController {
     }
 
     @PutMapping("/films")
-    public Film update(@Valid @RequestBody Film film) {
+    @Validated({Marker.OnUpdate.class})
+    public Film update(@Valid @RequestBody Film updatedfilm) {
         log.info("Запрос на обновление фильма");
-        if (!films.containsKey(film.getId())) {
+        RequestMethod requestMethod = RequestMethod.PUT;
+        doValidation(updatedfilm, requestMethod);
+        Film film = films.get(updatedfilm.getId());
+        film.setName(updatedfilm.getName());
+        film.setReleaseDate(updatedfilm.getReleaseDate());
+        film.setDuration(updatedfilm.getDuration());
+        film.setDescription(updatedfilm.getDescription());
+        log.info("Обновлен фильм" + film);
+        return updatedfilm;
+    }
+
+    private void doValidation(Film film, RequestMethod requestMethod) {
+        if (requestMethod.equals(RequestMethod.PUT) && !films.containsKey(film.getId())) {
             log.info("Несуществующий фильм");
             throw new ValidationException("Такого фильма нет" + FilmController.class.getSimpleName());
         }
-        doValidation(film);
-        films.put(film.getId(), film);
-        log.info("Добавлен фильм " + film);
-        return film;
-    }
-
-    private void doValidation(Film film) {
+        if (requestMethod.equals(RequestMethod.POST) && films.containsKey(film.getId())) {
+            log.info("Такой фильм уже есть");
+            throw new ValidationException("Такой фильм уже существует" + FilmController.class.getSimpleName());
+        }
         if (film.getName().isBlank()) {
             log.info("Пустое имя фильма");
             throw new ValidationException("Пустое имя фильма в запросе " +
@@ -61,7 +84,8 @@ public class FilmController {
                     FilmController.class.getSimpleName());
         }
         if (film.getReleaseDate() != null &&
-                film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+                film.getReleaseDate().isBefore(LocalDate.of(OLDEST_RELEASE_YEAR, OLDEST_RELEASE_MONTH,
+                        OLDEST_RELEASE_DAY))) {
             log.info("Дата релиза до 28.12.1895 года");
             throw new ValidationException("Слишком старая дата релиза в запросе " +
                     FilmController.class.getSimpleName());

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotation.Birthday;
 import ru.yandex.practicum.filmorate.annotation.Login;
+import ru.yandex.practicum.filmorate.sirvice.Marker;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -25,11 +26,4 @@ public class User {
     private String name;
     @Birthday
     private LocalDate birthday;
-
-    public interface Marker {
-
-        interface OnCreate {}
-
-        interface OnUpdate {}
-    }
 }

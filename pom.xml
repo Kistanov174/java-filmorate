@@ -15,6 +15,7 @@
 	<description>request top 5 films</description>
 	<properties>
 		<java.version>11</java.version>
+		<junit.version>5.9.2</junit.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -42,7 +43,7 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.9.1</version>
+			<version>${junit.version}</version>
 			<scope>test</scope>
 		</dependency>
 
