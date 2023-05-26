@@ -20,7 +20,7 @@ import java.util.Map;
 
 @Slf4j
 @Validated
-@RestController("~/ru/yandex/practicum/filmorate/controller/FilmController")
+@RestController("/ru/yandex/practicum/filmorate/controller/FilmController")
 public class FilmController {
     private Integer count = 1;
     private static final int OLDEST_RELEASE_YEAR = 1895;
@@ -34,6 +34,7 @@ public class FilmController {
 
     @GetMapping("/films")
     public List<Film> getAllFilms() {
+        log.info("Запрос на получение всех фильмов");
         return new ArrayList<>(films.values());
     }
 

@@ -20,9 +20,9 @@ import ru.yandex.practicum.filmorate.sirvice.Marker;
 
 @Slf4j
 @Validated
-@RestController("~/ru/yandex/practicum/filmorate/controller/UserController")
+@RestController("/ru/yandex/practicum/filmorate/controller/UserController")
 public class UserController {
-    Integer count = 1;
+    private Integer count = 1;
     private final Map<Integer, User> users = new HashMap<>();
 
     private Integer generateId() {
@@ -31,6 +31,7 @@ public class UserController {
 
     @GetMapping("/users")
     public List<User> getAllUsers() {
+        log.info("Запрос на получение всех пользователей");
         return new ArrayList<>(users.values());
     }
 
