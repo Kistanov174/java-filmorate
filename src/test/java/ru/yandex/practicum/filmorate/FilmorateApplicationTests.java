@@ -80,10 +80,10 @@ class FilmorateApplicationTests {
 	@DisplayName("Проверка валидации поля name у объекта класса Film")
 	void shouldGetValidationNameFilmExceptionWhenNameFilmIsBlank() {
 		film.setName("");
-		ValidationException ex1 = assertThrows(ValidationException.class, () -> filmController.create(film));
+		ValidationException ex1 = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
 		assertEquals("Пустое имя фильма в запросе FilmController", ex1.getMessage());
 		film.setName(" ");
-		ValidationException ex2 = assertThrows(ValidationException.class, () -> filmController.create(film));
+		ValidationException ex2 = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
 		assertEquals("Пустое имя фильма в запросе FilmController", ex2.getMessage());
 	}
 
@@ -95,7 +95,7 @@ class FilmorateApplicationTests {
 				" чтобы сохранить человечество в безопасности от сверхъестественных существ. Узнав о своей судьбе," +
 				" и том, что он является последним из своего рода, он должен защитить каждую живую душу от зловещих" +
 				" персонажей сборника сказок, которые проникли в реальный мир.");
-		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.create(film));
+		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
 		assertEquals("Слишком длинное описание фильма в запросе FilmController", ex.getMessage());
 	}
 
@@ -103,10 +103,10 @@ class FilmorateApplicationTests {
 	@DisplayName("Проверка валидации поля releaseDate у объекта класса Film")
 	void shouldGetValidationReleaseDateFilmExceptionWhenReleaseDateIsTooOld() {
 		film.setReleaseDate(LocalDate.of(1894, 12, 28));
-		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.create(film));
+		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
 		assertEquals("Слишком старая дата релиза в запросе FilmController", ex.getMessage());
 		film.setReleaseDate(LocalDate.of(1895, 12, 28));
-		Film newFilm = filmController.create(film);
+		Film newFilm = filmController.createFilm(film);
 		assertEquals(newFilm.getReleaseDate(), LocalDate.of(1895, 12, 28));
 	}
 
@@ -114,13 +114,13 @@ class FilmorateApplicationTests {
 	@DisplayName("Проверка валидации поля duration у объекта класса Film")
 	void shouldGetValidationDurationFilmExceptionWhenDurationIsNegative() {
 		film.setDuration(-57);
-		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.create(film));
+		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
 		assertEquals("Отрицательная продолжительность в запросе FilmController", ex.getMessage());
 		film.setDuration(0);
-		Film newFilm = filmController.create(film);
+		Film newFilm = filmController.createFilm(film);
 		assertEquals(newFilm.getDuration(), 0);
 		film.setDuration(59);
-		newFilm = filmController.update(film);
+		newFilm = filmController.updateFilm(film);
 		assertEquals(newFilm.getDuration(), 59);
 	}
 }

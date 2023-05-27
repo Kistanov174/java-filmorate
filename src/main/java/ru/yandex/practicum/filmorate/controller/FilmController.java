@@ -2,15 +2,10 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.sirvice.Marker;
+import ru.yandex.practicum.filmorate.validation.Marker;
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -20,7 +15,8 @@ import java.util.Map;
 
 @Slf4j
 @Validated
-@RestController("/ru/yandex/practicum/filmorate/controller/FilmController")
+@RestController
+@RequestMapping("/films")
 public class FilmController {
     private Integer count = 1;
     private static final int OLDEST_RELEASE_YEAR = 1895;
@@ -32,15 +28,15 @@ public class FilmController {
         return count++;
     }
 
-    @GetMapping("/films")
+    @GetMapping
     public List<Film> getAllFilms() {
         log.info("Запрос на получение всех фильмов");
         return new ArrayList<>(films.values());
     }
 
-    @PostMapping("/films")
+    @PostMapping
     @Validated({Marker.OnCreate.class})
-    public Film create(@Valid @RequestBody Film film) {
+    public Film createFilm(@Valid @RequestBody Film film) {
         log.info("Запрос на добавление нового фильма");
         RequestMethod requestMethod = RequestMethod.POST;
         doValidation(film, requestMethod);
@@ -50,9 +46,9 @@ public class FilmController {
         return film;
     }
 
-    @PutMapping("/films")
+    @PutMapping
     @Validated({Marker.OnUpdate.class})
-    public Film update(@Valid @RequestBody Film updatedfilm) {
+    public Film updateFilm(@Valid @RequestBody Film updatedfilm) {
         log.info("Запрос на обновление фильма");
         RequestMethod requestMethod = RequestMethod.PUT;
         doValidation(updatedfilm, requestMethod);

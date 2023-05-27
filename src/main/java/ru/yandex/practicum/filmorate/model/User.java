@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.yandex.practicum.filmorate.annotation.Birthday;
 import ru.yandex.practicum.filmorate.annotation.Login;
-import ru.yandex.practicum.filmorate.sirvice.Marker;
+import ru.yandex.practicum.filmorate.validation.Marker;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;

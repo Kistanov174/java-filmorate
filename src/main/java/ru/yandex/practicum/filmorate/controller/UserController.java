@@ -2,12 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import javax.validation.Valid;
@@ -16,11 +11,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import ru.yandex.practicum.filmorate.sirvice.Marker;
+import ru.yandex.practicum.filmorate.validation.Marker;
 
 @Slf4j
 @Validated
-@RestController("/ru/yandex/practicum/filmorate/controller/UserController")
+@RestController
+@RequestMapping("/users")
 public class UserController {
     private Integer count = 1;
     private final Map<Integer, User> users = new HashMap<>();
@@ -29,13 +25,13 @@ public class UserController {
         return count++;
     }
 
-    @GetMapping("/users")
+    @GetMapping
     public List<User> getAllUsers() {
         log.info("Запрос на получение всех пользователей");
         return new ArrayList<>(users.values());
     }
 
-    @PostMapping("/users")
+    @PostMapping
     @Validated({Marker.OnCreate.class})
     public User createUser(@Valid @RequestBody User user) {
         log.info("Запрос на добавление нового пользователя");
@@ -47,7 +43,7 @@ public class UserController {
         return user;
     }
 
-    @PutMapping("/users")
+    @PutMapping
     @Validated({Marker.OnUpdate.class})
     public User updateUser(@Valid @RequestBody User updatedUser) {
         log.info("Запрос на обновление пользователя");

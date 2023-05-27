@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.sirvice;
+package ru.yandex.practicum.filmorate.validation;
 
 public interface Marker {
 
