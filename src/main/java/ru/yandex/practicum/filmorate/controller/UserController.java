@@ -1,92 +1,73 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import javax.validation.Valid;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import java.util.List;
-import java.util.Map;
-import ru.yandex.practicum.filmorate.validation.Marker;
 
 @Slf4j
 @Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private Integer count = 1;
-    private final Map<Integer, User> users = new HashMap<>();
+    private final InMemoryUserStorage inMemoryUserStorage;
+    private final UserService userService;
 
-    private Integer generateId() {
-        return count++;
+    @Autowired
+    public UserController(InMemoryUserStorage inMemoryUserStorage, UserService userService) {
+        this.inMemoryUserStorage = inMemoryUserStorage;
+        this.userService = userService;
     }
 
     @GetMapping
     public List<User> getAllUsers() {
         log.info("Запрос на получение всех пользователей");
-        return new ArrayList<>(users.values());
+        return inMemoryUserStorage.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUserById(@PathVariable Integer id) {
+        log.info("Запрос на получение пользователя по ID");
+        return inMemoryUserStorage.getUserById(id);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> showFriends(@PathVariable Integer id) {
+        log.info("Запрос на отображение друзей пользователя");
+        return userService.showFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> showCommonFriends(@PathVariable Integer id, @PathVariable Integer otherId) {
+        log.info("Запрос на отображение общих друзей пользователей");
+        return userService.showCommonFriends(id, otherId);
     }
 
     @PostMapping
-    @Validated({Marker.OnCreate.class})
-    public User createUser(@Valid @RequestBody User user) {
+    public User createUser(@RequestBody User user) {
         log.info("Запрос на добавление нового пользователя");
-        RequestMethod requestMethod = RequestMethod.POST;
-        doValidation(user, requestMethod);
-        user.setId(generateId());
-        users.put(user.getId(), user);
-        log.info("Создан пользователь " + user);
-        return user;
+        return inMemoryUserStorage.createUser(user);
     }
 
     @PutMapping
-    @Validated({Marker.OnUpdate.class})
-    public User updateUser(@Valid @RequestBody User updatedUser) {
+    public User updateUser(@RequestBody User updatedUser) {
         log.info("Запрос на обновление пользователя");
-        RequestMethod requestMethod = RequestMethod.PUT;
-        doValidation(updatedUser, requestMethod);
-        User user = users.get(updatedUser.getId());
-        user.setBirthday(updatedUser.getBirthday());
-        user.setEmail(updatedUser.getEmail());
-        user.setLogin(updatedUser.getLogin());
-        user.setName(updatedUser.getName());
-        log.info("Обновлен пользователь " + user);
-        return updatedUser;
+        return inMemoryUserStorage.updateUser(updatedUser);
     }
 
-    private void doValidation(User user, RequestMethod requestMethod) {
-        if (requestMethod.equals(RequestMethod.PUT) && !users.containsKey(user.getId())) {
-            log.info("Несуществующий пользователь");
-            throw new ValidationException("Такого пользователтя нет" + UserController.class.getSimpleName());
-        }
-        if (requestMethod.equals(RequestMethod.POST) && users.containsKey(user.getId())) {
-            log.info("Такой пользователь уже создан");
-            throw new ValidationException("Такой пользователь уже существует" + UserController.class.getSimpleName());
-        }
-        if (user.getEmail().isBlank()) {
-            log.info("Пустой email-адрес");
-            throw new ValidationException("Пустой email-адрес в запросе " + UserController.class.getSimpleName());
-        }
-        if (!user.getEmail().contains("@")) {
-            log.info("Неправильный формат email");
-            throw new ValidationException("Неправильный формат email в запросе " + UserController.class.getSimpleName());
-        }
-        if (user.getLogin().isBlank()) {
-            log.info("Пустой login");
-            throw new ValidationException("Пустой login в запросе " + UserController.class.getSimpleName());
-        }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.info("Дата рождения еще не наступила");
-            throw new ValidationException("Дата рождения еще не наступила в запросе " +
-                    UserController.class.getSimpleName());
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-            log.info("Имя не указано, использован логин");
-        }
+    @PutMapping("/{id}/friends/{friendId}")
+    public User addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
+        log.info("Запрос на добавление в друзья");
+        return userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public User deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+        log.info("Запрос на удаление из друзей");
+        return userService.deleteFriend(id, friendId);
     }
 }

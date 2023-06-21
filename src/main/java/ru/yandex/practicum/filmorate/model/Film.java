@@ -6,6 +6,8 @@ import ru.yandex.practicum.filmorate.annotation.ReleaseDate;
 import ru.yandex.practicum.filmorate.validation.Marker;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -22,4 +24,5 @@ public class Film {
     @Min(0)
     private Integer duration;
     private int rate = 0;
+    public final Set<Integer> likes = new HashSet<>();
 }

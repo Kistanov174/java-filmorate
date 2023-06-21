@@ -10,6 +10,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -26,4 +28,5 @@ public class User {
     private String name;
     @Birthday
     private LocalDate birthday;
+    public final Set<Integer> friends = new HashSet<>();
 }
