@@ -22,33 +22,33 @@ public class UserService {
     public User addFriend(Integer id, Integer friendId) {
         userStorage.getUserById(id).friends.add(friendId);
         userStorage.getUserById(friendId).friends.add(id);
-        log.info("Произведено добавление в друзья");
+        log.info(String.format("User with id = %d has been added to the user's friends with id = %d", friendId, id));
         return userStorage.getUserById(id);
     }
 
     public User deleteFriend(Integer id, Integer friendId) {
         if (!userStorage.getUserById(id).friends.contains(friendId)) {
-            throw new ObjectNotFoundException(String.format("У пользователя нет друга с id = %d", friendId));
+            throw new ObjectNotFoundException(String.format("The user doesn't have friend with id = %d", friendId));
         }
         userStorage.getUserById(id).friends.remove(friendId);
         userStorage.getUserById(friendId).friends.remove(id);
-        log.info("Произведено удаление из друзей");
+        log.info(String.format("User with id = %d has been deleted from the user's friends with id = %d", friendId, id));
         return userStorage.getUserById(id);
     }
 
     public List<User> showCommonFriends(Integer id, Integer otherId) {
-        log.info("Отображены общие друзья");
+        log.info(String.format("The common friends of the users with id = %d and %d have been showed", id, otherId));
         return userStorage.getUserById(id).friends.stream()
                 .filter(userStorage.getUserById(otherId).friends::contains)
-                .map(x -> userStorage.getUserById(x))
+                .map(userStorage::getUserById)
                 .collect(Collectors.toList());
     }
 
     public List<User> showFriends(Integer id) {
-        log.info("Отображены друзья");
+        log.info(String.format("The user's friends with id = %d have been showed", id));
         return userStorage.getUserById(id).friends.stream()
                 .filter(x -> x >= 0)
-                .map(x -> userStorage.getUserById(x))
+                .map(userStorage::getUserById)
                 .collect(Collectors.toList());
     }
 }

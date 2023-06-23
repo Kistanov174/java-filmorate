@@ -1,24 +1,26 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.util.CollectionUtils;
 import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.exception.ObjectNotExistException;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.validation.Validator;
+import java.util.*;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class InMemoryUserStorage implements UserStorage {
     private Integer count = 1;
     private final Map<Integer, User> users = new HashMap<>();
+    private final Validator validator;
 
     private Integer generateId() {
         return count++;
@@ -26,71 +28,71 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public List<User> getAllUsers() {
+        log.info(String.format("List of %d users has been received", users.size()));
         return new ArrayList<>(users.values());
     }
 
     @Override
     public User getUserById(Integer id) {
         if (!users.containsKey(id)) {
-            throw new ObjectNotFoundException(String.format("Пользователя с id = %d не существует", id));
+            throw new ObjectNotFoundException(String.format("User with id = %d is absent", id));
         }
-        log.info("Получен пользователь " + users.get(id));
-        return users.get(id);
+        User user = users.get(id);
+        if (user == null) {
+            throw new ObjectNotExistException(String.format("User with id = %d equals null", id));
+        }
+        log.info(String.format("User with id = %d has been received: ", id) + users.get(id));
+        return user;
     }
 
     @Override
     public User createUser(@Valid User user) {
-        log.info("Запрос на добавление нового пользователя");
-        RequestMethod requestMethod = RequestMethod.POST;
-        doValidation(user, requestMethod);
+        validateForCreate(user);
         user.setId(generateId());
         users.put(user.getId(), user);
-        log.info("Создан пользователь " + user);
+        log.info("User has been created: " + user);
         return user;
     }
 
     @Override
     public User updateUser(@Valid User updatedUser) {
-        RequestMethod requestMethod = RequestMethod.PUT;
-        doValidation(updatedUser, requestMethod);
+        validateForUpdate(updatedUser);
         User user = users.get(updatedUser.getId());
         user.setBirthday(updatedUser.getBirthday());
         user.setEmail(updatedUser.getEmail());
         user.setLogin(updatedUser.getLogin());
         user.setName(updatedUser.getName());
-        log.info("Обновлен пользователь " + user);
+        log.info("User has been updated to: " + user);
         return updatedUser;
     }
 
-    private void doValidation(User user, RequestMethod requestMethod) {
-        if (requestMethod.equals(RequestMethod.PUT) && !users.containsKey(user.getId())) {
-            log.info("Несуществующий пользователь");
-            throw new NullPointerException("Такого пользователтя нет" + UserController.class.getSimpleName());
+    private void validateForUpdate(User user) {
+        Integer id = user.getId();
+        if (!users.containsKey(id)) {
+            log.info(String.format("Film with id = %d doesn't exist", id));
+            throw new ObjectNotExistException(user + " doesn't exist " + UserController.class.getSimpleName());
         }
-        if (requestMethod.equals(RequestMethod.POST) && users.containsKey(user.getId())) {
-            log.info("Такой пользователь уже создан");
-            throw new ValidationException("Такой пользователь уже существует" + UserController.class.getSimpleName());
+        validateUser(user);
+    }
+
+    private void validateForCreate(User user) {
+        Integer id = user.getId();
+        if (users.containsKey(id)) {
+            log.info(String.format("Film with id = %d doesn't exist", id));
+            throw new ValidationException(user + " is already exist " + UserController.class.getSimpleName());
         }
-        if (user.getEmail().isBlank()) {
-            log.info("Пустой email-адрес");
-            throw new ValidationException("Пустой email-адрес в запросе " + UserController.class.getSimpleName());
-        }
-        if (!user.getEmail().contains("@")) {
-            log.info("Неправильный формат email");
-            throw new ValidationException("Неправильный формат email в запросе " + UserController.class.getSimpleName());
-        }
-        if (user.getLogin().isBlank()) {
-            log.info("Пустой login");
-            throw new ValidationException("Пустой login в запросе " + UserController.class.getSimpleName());
-        }
-        if (user.getBirthday() != null && user.getBirthday().isAfter(LocalDate.now())) {
-            log.info("Дата рождения еще не наступила");
-            throw new ValidationException("Дата рождения еще не наступила в запросе " +
-                    UserController.class.getSimpleName());
+        validateUser(user);
+    }
+
+    private void validateUser(User user) {
+        Set<ConstraintViolation<User>> constraintViolationSet = validator.validate(user);
+        if (!CollectionUtils.isEmpty(constraintViolationSet)) {
+            log.info("Validation failed - " + constraintViolationSet);
+            throw new ValidationException("Validation failed " + constraintViolationSet);
         }
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
-            log.info("Имя не указано, использован логин");
+            log.info("Name is absent, login is used");
         }
     }
 }

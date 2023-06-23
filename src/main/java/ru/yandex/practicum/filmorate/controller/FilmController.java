@@ -26,44 +26,44 @@ public class FilmController {
 
     @GetMapping
     public List<Film> getAllFilms() {
-        log.info("Запрос на получение всех фильмов");
+        log.info("Request to receive all movies");
         return inMemoryFilmStorage.getAllFilms();
     }
 
     @GetMapping("/{id}")
     public Film getFilmById(@PathVariable Integer id) {
-        log.info("Запрос на получение фильма по ID");
+        log.info("Request to receive a movie by ID");
         return inMemoryFilmStorage.getFilmById(id);
     }
 
     @GetMapping("/popular")
     public List<Film> showMostPopularFilms(@RequestParam(required = false, defaultValue = "10") Integer count) {
-        log.info("Запрос на получение самых популярных фильмов");
+        log.info("Request for the most popular movies");
         return filmService.showMostPopularFilms(count);
     }
 
     @PostMapping
     public Film createFilm(@RequestBody Film film) {
-        log.info("Запрос на добавление нового фильма");
+        log.info("Request to create a new movie");
         return inMemoryFilmStorage.createFilm(film);
     }
 
     @PutMapping
     @Validated({Marker.OnUpdate.class})
     public Film updateFilm(@RequestBody Film updatedfilm) {
-        log.info("Запрос на обновление фильма");
+        log.info("Movie Update Request");
         return inMemoryFilmStorage.updateFilm(updatedfilm);
     }
 
     @PutMapping("/{id}/like/{userId}")
     public Film addLike(@PathVariable Integer id, @PathVariable Integer userId) {
-        log.info("Запрос на лайк фильма");
+        log.info("Request to like the movie");
         return filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     public Film deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
-        log.info("Запрос на удаление лайка фильма");
+        log.info("Request to delete a movie like");
         return filmService.deleteLike(id, userId);
     }
 }
