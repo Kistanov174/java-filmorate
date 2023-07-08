@@ -7,7 +7,9 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 public class Mpa {
-    public Mpa() {}
+    public Mpa() {
+
+    }
 
     @NotNull
     private Integer id;

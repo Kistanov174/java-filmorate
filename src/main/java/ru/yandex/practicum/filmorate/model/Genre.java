@@ -7,7 +7,9 @@ import javax.validation.constraints.NotNull;
 @Data
 @AllArgsConstructor
 public class Genre {
-    public  Genre() {}
+    public  Genre() {
+
+    }
 
     @NotNull
     private Integer id;

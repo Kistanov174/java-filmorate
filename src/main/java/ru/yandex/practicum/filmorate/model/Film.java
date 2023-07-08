@@ -12,7 +12,9 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 public class Film {
-    public Film() {}
+    public Film() {
+
+    }
 
     @Null(groups = Marker.OnCreate.class)
     @NotNull(groups = Marker.OnUpdate.class)
