@@ -34,15 +34,15 @@ public class FilmDbService implements FilmService {
         return filmDbStorage.getFilmById(id);
     }
 
-    public Optional<Film> addGenre(Integer id, Integer genre_id) {
+    public Optional<Film> addGenre(Integer id, Integer genreId) {
         String sql = "insert into film_genre(film_id, genre_id) values(?, ?)";
-        jdbcTemplate.update(sql, id, genre_id);
+        jdbcTemplate.update(sql, id, genreId);
         return filmDbStorage.getFilmById(id);
     }
 
-    public Optional<Film> deleteGenre(Integer id, Integer genre_id) {
+    public Optional<Film> deleteGenre(Integer id, Integer genreId) {
         String sql = "delete from film_genre(film_id, genre_id) values(?, ?)";
-        jdbcTemplate.update(sql, id, genre_id);
+        jdbcTemplate.update(sql, id, genreId);
         return filmDbStorage.getFilmById(id);
     }
 
@@ -74,7 +74,8 @@ public class FilmDbService implements FilmService {
             } while (rs.next() && rs.getInt("id") == film.getId());
             films.add(film);
             film.setRate(film.getLikes().size());
-        } while(!rs.isAfterLast());
+        }
+        while(!rs.isAfterLast());
         return films;
     }
 }
