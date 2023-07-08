@@ -42,14 +42,14 @@ public class UserDbService implements UserService {
         String queryCommonFriendsId = "select uf.friend_id from (" + queryUserFriendsId + ") as uf inner join ("
                 + queryFriendFriendsId
                 + ") as ff on uf.friend_id = ff.friend_id";
-        String sql = "select * from users where id in(" + queryCommonFriendsId +")";
+        String sql = "select * from users where id in(" + queryCommonFriendsId + ")";
         return new ArrayList<>(jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id, otherId));
     }
 
     @Override
     public List<User> showFriends(Integer id) {
         String queryUserFriendsId = "select friend_id from friends where user_id = ?";
-        String sql = "select * from users where id in(" + queryUserFriendsId +")";
+        String sql = "select * from users where id in(" + queryUserFriendsId + ")";
         return new ArrayList<>(jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id));
     }
 
