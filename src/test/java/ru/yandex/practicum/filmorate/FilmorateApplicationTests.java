@@ -7,10 +7,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.Impl.UserDbStorage;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.util.Optional;
 
 @SpringBootTest
@@ -18,6 +15,7 @@ import java.util.Optional;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateApplicationTests {
 	private final UserDbStorage userStorage;
+
 	@Test
 	public void testFindUserById() {
 		Optional<User> userOptional = userStorage.getUserById(1);
