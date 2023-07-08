@@ -1,126 +1,106 @@
 package ru.yandex.practicum.filmorate;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import ru.yandex.practicum.filmorate.controller.FilmController;
-import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import ru.yandex.practicum.filmorate.storage.Impl.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.Impl.UserDbStorage;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 
 @SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateApplicationTests {
-	private Film film;
-	private User user;
-	private final UserController userController;
-	private final FilmController filmController;
+	private final UserDbStorage userStorage;
+	private final FilmDbStorage filmStorage;
 
-	@Autowired
-	public FilmorateApplicationTests(UserController userController, FilmController filmController) {
-		this.userController = userController;
-		this.filmController = filmController;
-	}
-
-	@BeforeEach
-	public void beforeEach() {
-		film = new Film(null, "Grimm", "Fantasy", LocalDate.of(2022, 9, 7),
-				0, 0);
-		user = new User(null,"aleksey.kistanov@yandex.ru", "leksa", "Миша", null);
+	@Test
+	public void testCreateAndUpdateUser() {
+		Optional<User> newUser = userStorage.createUser(new User(null, "email@gmail.com", "login",
+				"user", LocalDate.of(2000, 1, 1)));
+		assertThat(newUser).isPresent()
+				.hasValueSatisfying(user -> assertThat(user).hasFieldOrPropertyWithValue("name", "user"));
+		updateUser();
 	}
 
 	@Test
-	@DisplayName("Проверка валидации email-адреса у объекта класса User")
-	void shouldGetValidationEmailExceptionWhenEmailHasWrongEmailAddress() {
-		user.setEmail("aleksey.kistanovyandex.ru");
-		ValidationException ex1 = assertThrows(ValidationException.class, () -> userController.createUser(user));
-		assertEquals("Неправильный формат email в запросе UserController", ex1.getMessage());
-		user.setEmail("");
-		ValidationException ex2 = assertThrows(ValidationException.class, () -> userController.createUser(user));
-		assertEquals("Пустой email-адрес в запросе UserController", ex2.getMessage());
+	public void testGetUserById() {
+		Optional<User> userOptional = userStorage.getUserById(1);
+		assertThat(userOptional)
+				.isPresent()
+				.hasValueSatisfying(user ->
+						assertThat(user).hasFieldOrPropertyWithValue("id", 1)
+				);
 	}
 
 	@Test
-	@DisplayName("Проверка валидации login у объекта класса User")
-	void shouldGetValidationLoginExceptionWhenLoginIsBlank() {
-		user.setLogin("");
-		ValidationException ex1 = assertThrows(ValidationException.class, () -> userController.createUser(user));
-		assertEquals("Пустой login в запросе UserController", ex1.getMessage());
-		user.setLogin("  ");
-		ValidationException ex2 = assertThrows(ValidationException.class, () -> userController.createUser(user));
-		assertEquals("Пустой login в запросе UserController", ex2.getMessage());
+	public void testGetAllUsers() {
+		Optional<List<User>> newUsers = userStorage.getAllUsers();
+		assertThat(newUsers)
+				.isPresent()
+				.hasValueSatisfying(users ->
+						assertThat(users).isNotNull()
+				);
+	}
+
+	private void updateUser() {
+		Optional<User> user = userStorage.getUserById(1);
+		user.ifPresent(value -> value.setName("newName"));
+		Optional<User> userOptional = userStorage.updateUser(user.get());
+		assertThat(userOptional)
+				.isPresent()
+				.hasValueSatisfying(updatedUser ->
+						assertThat(updatedUser).hasFieldOrPropertyWithValue("name", "newName")
+				);
 	}
 
 	@Test
-	@DisplayName("Проверка замены пустого name на login у объекта класса User")
-	void shouldGetLoginInsteadOfEmptyName() {
-		userController.createUser(user);
-		user.setName("");
-		User updateUser = userController.updateUser(user);
-		assertEquals("leksa", updateUser.getName());
+	public void testCreateAndUpdateFilm() {
+		Optional<Film> filmOptional = filmStorage.createFilm(new Film(null, "newFilm",
+				"description film", LocalDate.of(2023, 5, 1), 120, 0,
+				new Mpa(1, "")));
+		assertThat(filmOptional)
+				.isPresent()
+				.hasValueSatisfying(film -> assertThat(film).hasFieldOrPropertyWithValue("id", 2));
+		updateFilm();
+	}
+
+	private void updateFilm() {
+		Optional<Film> filmOptional = filmStorage.getFilmById(1);
+		filmOptional.ifPresent(film -> film.setDuration(100));
+		filmStorage.updateFilm(filmOptional.get());
+		assertThat(filmOptional)
+				.isPresent()
+				.hasValueSatisfying(film -> assertThat(film).hasFieldOrPropertyWithValue("duration", 100)
+				);
 	}
 
 	@Test
-	@DisplayName("Проверка валидации birthday у объекта класса User")
-	void shouldGetValidationBirthdayExceptionWhenBirthdayIsInFuture() {
-		user.setBirthday(LocalDate.of(2200, 1, 1));
-		ValidationException ex = assertThrows(ValidationException.class, () -> userController.createUser(user));
-		assertEquals("Дата рождения еще не наступила в запросе UserController", ex.getMessage());
-		user.setBirthday(LocalDate.now());
-		userController.createUser(user);
-		assertEquals(LocalDate.now(), user.getBirthday(), "User с текущей датой рождения не создался");
+	public void testGetFilmById() {
+		Optional<Film> newFilm = filmStorage.createFilm(new Film(null, "newFilm",
+				"description film", LocalDate.of(2023, 5, 1), 120, 0,
+				new Mpa(1, "")));
+		Optional<Film> filmOptional = filmStorage.getFilmById(1);
+		assertThat(filmOptional)
+				.isPresent()
+				.hasValueSatisfying(film -> assertThat(film).hasFieldOrPropertyWithValue("name", "newFilm"));
 	}
 
 	@Test
-	@DisplayName("Проверка валидации поля name у объекта класса Film")
-	void shouldGetValidationNameFilmExceptionWhenNameFilmIsBlank() {
-		film.setName("");
-		ValidationException ex1 = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
-		assertEquals("Пустое имя фильма в запросе FilmController", ex1.getMessage());
-		film.setName(" ");
-		ValidationException ex2 = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
-		assertEquals("Пустое имя фильма в запросе FilmController", ex2.getMessage());
-	}
-
-	@Test
-	@DisplayName("Проверка валидации поля description у объекта класса Film")
-	void shouldGetValidationDescriptionFilmExceptionWhenDescriptionIsTooLong() {
-		film.setDescription("Действие происходит в современном Портленде, где детектив из отдела убийств узнаёт, " +
-				"что он является потомком группы охотников, известных как «Гриммы», которые сражаются," +
-				" чтобы сохранить человечество в безопасности от сверхъестественных существ. Узнав о своей судьбе," +
-				" и том, что он является последним из своего рода, он должен защитить каждую живую душу от зловещих" +
-				" персонажей сборника сказок, которые проникли в реальный мир.");
-		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
-		assertEquals("Слишком длинное описание фильма в запросе FilmController", ex.getMessage());
-	}
-
-	@Test
-	@DisplayName("Проверка валидации поля releaseDate у объекта класса Film")
-	void shouldGetValidationReleaseDateFilmExceptionWhenReleaseDateIsTooOld() {
-		film.setReleaseDate(LocalDate.of(1894, 12, 28));
-		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
-		assertEquals("Слишком старая дата релиза в запросе FilmController", ex.getMessage());
-		film.setReleaseDate(LocalDate.of(1895, 12, 28));
-		Film newFilm = filmController.createFilm(film);
-		assertEquals(newFilm.getReleaseDate(), LocalDate.of(1895, 12, 28));
-	}
-
-	@Test
-	@DisplayName("Проверка валидации поля duration у объекта класса Film")
-	void shouldGetValidationDurationFilmExceptionWhenDurationIsNegative() {
-		film.setDuration(-57);
-		ValidationException ex = assertThrows(ValidationException.class, () -> filmController.createFilm(film));
-		assertEquals("Отрицательная продолжительность в запросе FilmController", ex.getMessage());
-		film.setDuration(0);
-		Film newFilm = filmController.createFilm(film);
-		assertEquals(newFilm.getDuration(), 0);
-		film.setDuration(59);
-		newFilm = filmController.updateFilm(film);
-		assertEquals(newFilm.getDuration(), 59);
+	public void testGetAllFilms() {
+		Optional<List<Film>> newFilms = filmStorage.getAllFilms();
+		assertThat(newFilms)
+				.isPresent()
+				.hasValueSatisfying(films ->
+						assertThat(films).isNotNull()
+				);
 	}
 }

@@ -1,69 +1,67 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.service.Impl.FilmDbService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.validation.Marker;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Validated
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
-    private final InMemoryFilmStorage inMemoryFilmStorage;
-    private final FilmService filmService;
-
-    @Autowired
-    public FilmController(InMemoryFilmStorage inMemoryFilmStorage, FilmService filmService) {
-        this.inMemoryFilmStorage = inMemoryFilmStorage;
-        this.filmService = filmService;
-    }
+    @Qualifier("filmDbStorage")
+    private final FilmStorage filmDbStorage;
+    private final FilmDbService filmDbService;
 
     @GetMapping
-    public List<Film> getAllFilms() {
+    public Optional<List<Film>> getAllFilms() {
         log.info("Request to receive all movies");
-        return inMemoryFilmStorage.getAllFilms();
+        return filmDbStorage.getAllFilms();
     }
 
     @GetMapping("/{id}")
-    public Film getFilmById(@PathVariable Integer id) {
+    public Optional<Film> getFilmById(@PathVariable Integer id) {
         log.info("Request to receive a movie by ID");
-        return inMemoryFilmStorage.getFilmById(id);
+        return filmDbStorage.getFilmById(id);
     }
 
     @GetMapping("/popular")
     public List<Film> showMostPopularFilms(@RequestParam(required = false, defaultValue = "10") Integer count) {
         log.info("Request for the most popular movies");
-        return filmService.showMostPopularFilms(count);
+        return filmDbService.showMostPopularFilms(count);
     }
 
     @PostMapping
-    public Film createFilm(@RequestBody Film film) {
+    public Optional<Film> createFilm(@RequestBody Film film) {
         log.info("Request to create a new movie");
-        return inMemoryFilmStorage.createFilm(film);
+        return filmDbStorage.createFilm(film);
     }
 
     @PutMapping
     @Validated({Marker.OnUpdate.class})
-    public Film updateFilm(@RequestBody Film updatedfilm) {
+    public Optional<Film> updateFilm(@RequestBody Film updatedfilm) {
         log.info("Movie Update Request");
-        return inMemoryFilmStorage.updateFilm(updatedfilm);
+        return filmDbStorage.updateFilm(updatedfilm);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public Optional<Film> addLike(@PathVariable Integer id, @PathVariable Integer userId) {
         log.info("Request to like the movie");
-        return filmService.addLike(id, userId);
+        return filmDbService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public Optional<Film> deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
         log.info("Request to delete a movie like");
-        return filmService.deleteLike(id, userId);
+        return filmDbService.deleteLike(id, userId);
     }
 }

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.Impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,13 +9,14 @@ import ru.yandex.practicum.filmorate.exception.ObjectNotExistException;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
 import java.util.*;
 
 @Slf4j
-@Component
+@Component("inMemoryFilmStorage")
 @RequiredArgsConstructor
 public class InMemoryFilmStorage implements FilmStorage {
     private Integer count = 1;
@@ -30,13 +31,13 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getAllFilms() {
+    public Optional<List<Film>> getAllFilms() {
         log.info(String.format("List of %d film has been received", films.size()));
-        return new ArrayList<>(films.values());
+        return Optional.of(new ArrayList<>(films.values()));
     }
 
     @Override
-    public Film getFilmById(Integer id) {
+    public Optional<Film> getFilmById(Integer id) {
         if (!films.containsKey(id)) {
             throw new ObjectNotFoundException(String.format("The film with id = %d not found", id));
         }
@@ -45,20 +46,20 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new ObjectNotExistException(String.format("Film with id = %d equals null", id));
         }
         log.info("The film has been received: " + film);
-        return film;
+        return Optional.of(film);
     }
 
     @Override
-    public Film createFilm(@Valid Film film) {
+    public Optional<Film> createFilm(@Valid Film film) {
         validateForCreate(film);
         film.setId(generateId());
         films.put(film.getId(), film);
         log.info("Film has been created: " + film);
-        return film;
+        return Optional.of(film);
     }
 
     @Override
-    public Film updateFilm(@Valid Film updatedfilm) {
+    public Optional<Film> updateFilm(@Valid Film updatedfilm) {
         validateForUpdate(updatedfilm);
         Film film = films.get(updatedfilm.getId());
         film.setName(updatedfilm.getName());
@@ -66,7 +67,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         film.setDuration(updatedfilm.getDuration());
         film.setDescription(updatedfilm.getDescription());
         log.info(String.format("Film with id = %d has been updated to: ", film.getId()) + updatedfilm);
-        return updatedfilm;
+        return Optional.of(updatedfilm);
     }
 
     private void validateForUpdate(Film film) {

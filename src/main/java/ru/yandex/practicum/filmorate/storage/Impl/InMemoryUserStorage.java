@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.Impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,13 +9,14 @@ import ru.yandex.practicum.filmorate.exception.ObjectNotExistException;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
 import java.util.*;
 
 @Slf4j
-@Component
+@Component("inMemoryUserStorage")
 @RequiredArgsConstructor
 public class InMemoryUserStorage implements UserStorage {
     private Integer count = 1;
@@ -27,13 +28,13 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> getAllUsers() {
+    public Optional<List<User>> getAllUsers() {
         log.info(String.format("List of %d users has been received", users.size()));
-        return new ArrayList<>(users.values());
+        return Optional.of(new ArrayList<>(users.values()));
     }
 
     @Override
-    public User getUserById(Integer id) {
+    public Optional<User> getUserById(Integer id) {
         if (!users.containsKey(id)) {
             throw new ObjectNotFoundException(String.format("User with id = %d is absent", id));
         }
@@ -42,20 +43,20 @@ public class InMemoryUserStorage implements UserStorage {
             throw new ObjectNotExistException(String.format("User with id = %d equals null", id));
         }
         log.info(String.format("User with id = %d has been received: ", id) + users.get(id));
-        return user;
+        return Optional.of(user);
     }
 
     @Override
-    public User createUser(@Valid User user) {
+    public Optional<User> createUser(@Valid User user) {
         validateForCreate(user);
         user.setId(generateId());
         users.put(user.getId(), user);
         log.info("User has been created: " + user);
-        return user;
+        return Optional.of(user);
     }
 
     @Override
-    public User updateUser(@Valid User updatedUser) {
+    public Optional<User> updateUser(@Valid User updatedUser) {
         validateForUpdate(updatedUser);
         User user = users.get(updatedUser.getId());
         user.setBirthday(updatedUser.getBirthday());
@@ -63,7 +64,7 @@ public class InMemoryUserStorage implements UserStorage {
         user.setLogin(updatedUser.getLogin());
         user.setName(updatedUser.getName());
         log.info("User has been updated to: " + user);
-        return updatedUser;
+        return Optional.of(updatedUser);
     }
 
     private void validateForUpdate(User user) {

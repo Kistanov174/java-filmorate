@@ -2,37 +2,41 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final InMemoryUserStorage inMemoryUserStorage;
+    @Qualifier("userDbStorage")
+    private final UserStorage userStorage;
+    @Qualifier("userDbService")
     private final UserService userService;
 
     @Autowired
-    public UserController(InMemoryUserStorage inMemoryUserStorage, UserService userService) {
-        this.inMemoryUserStorage = inMemoryUserStorage;
-        this.userService = userService;
+    public UserController(UserStorage userDbStorage, UserService userDbService) {
+        this.userStorage = userDbStorage;
+        this.userService = userDbService;
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
+    public Optional<List<User>> getAllUsers() {
         log.info("Request to get all users");
-        return inMemoryUserStorage.getAllUsers();
+        return userStorage.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Integer id) {
+    public Optional<User> getUserById(@PathVariable Integer id) {
         log.info("Request to get a user by ID");
-        return inMemoryUserStorage.getUserById(id);
+        return userStorage.getUserById(id);
     }
 
     @GetMapping("/{id}/friends")
@@ -48,25 +52,25 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public Optional<User> createUser(@RequestBody User user) {
         log.info("Request to add a new user");
-        return inMemoryUserStorage.createUser(user);
+        return userStorage.createUser(user);
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User updatedUser) {
+    public Optional<User> updateUser(@RequestBody User updatedUser) {
         log.info("Request to update a user");
-        return inMemoryUserStorage.updateUser(updatedUser);
+        return userStorage.updateUser(updatedUser);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public User addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
+    public Optional<User> addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("Friend Request");
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public User deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+    public Optional<User> deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("Request to remove from friends");
         return userService.deleteFriend(id, friendId);
     }
