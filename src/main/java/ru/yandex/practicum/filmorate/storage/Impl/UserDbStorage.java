@@ -55,12 +55,12 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Optional<User> updateUser(User updatedUser) {
         String sql = "update users set email = ?, login = ?, name = ?, birthday = ? where id = ?";
-        jdbcTemplate.update(sql
-                , updatedUser.getEmail()
-                , updatedUser.getLogin()
-                , updatedUser.getName()
-                , updatedUser.getBirthday()
-                , updatedUser.getId());
+        jdbcTemplate.update(sql,
+                updatedUser.getEmail(),
+                updatedUser.getLogin(),
+                updatedUser.getName(),
+                updatedUser.getBirthday(),
+                updatedUser.getId());
         return getUserById(Objects.requireNonNull(updatedUser.getId()));
     }
 
