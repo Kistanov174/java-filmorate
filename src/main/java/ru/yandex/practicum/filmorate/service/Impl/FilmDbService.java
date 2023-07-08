@@ -71,11 +71,12 @@ public class FilmDbService implements FilmService {
                 if (rs.getInt("user_id") != 0) {
                     film.likes.add(rs.getInt("user_id"));
                 }
-            } while (rs.next() && rs.getInt("id") == film.getId());
+            }
+            while (rs.next() && rs.getInt("id") == film.getId());
             films.add(film);
             film.setRate(film.getLikes().size());
         }
-        while(!rs.isAfterLast());
+        while (!rs.isAfterLast());
         return films;
     }
 }
