@@ -12,7 +12,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 @Component
-@RequestMapping("/genres")
 @RequiredArgsConstructor
 public class GenreDbStorage {
     JdbcTemplate jdbcTemplate;

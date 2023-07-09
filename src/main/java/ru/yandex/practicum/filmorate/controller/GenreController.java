@@ -13,18 +13,18 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/genre")
+@RequestMapping("/genres")
 public class GenreController {
     private final GenreDbStorage genreDbStorage;
 
     @GetMapping
-    public List<Genre> getAllJenres() {
+    public List<Genre> getAllGenres() {
         log.info("Request to get all genres");
         return  genreDbStorage.getAllGenres();
     }
 
     @GetMapping("/{id}")
-    public Genre getJenreById(@PathVariable Integer id) {
+    public Genre getGenreById(@PathVariable Integer id) {
         log.info("Request to get genre by id");
         return genreDbStorage.getGenreById(id);
     }
