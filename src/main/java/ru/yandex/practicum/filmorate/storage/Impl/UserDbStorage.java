@@ -8,11 +8,10 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import ru.yandex.practicum.filmorate.controller.UserController;
-import ru.yandex.practicum.filmorate.exception.ObjectNotExistException;
+import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-
 import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
@@ -97,9 +96,9 @@ public class UserDbStorage implements UserStorage {
 
     private void validateForUpdate(User user) {
         Integer id = user.getId();
-        if (jdbcTemplate.queryForList(sql).contains(id)) {
+        if (!jdbcTemplate.queryForList(sql).contains(id)) {
             log.info(String.format("Film with id = %d doesn't exist", id));
-            throw new ObjectNotExistException(user + " doesn't exist " + UserController.class.getSimpleName());
+            throw new ObjectNotFoundException(user + " doesn't exist " + UserController.class.getSimpleName());
         }
         validateUser(user);
     }

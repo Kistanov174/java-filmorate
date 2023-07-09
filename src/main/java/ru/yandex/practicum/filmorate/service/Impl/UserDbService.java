@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +29,7 @@ public class UserDbService implements UserService {
 
     @Override
     public Optional<User> deleteFriend(Integer id, Integer friendId) {
-        String sql = "delete from friends(user_id, friend_id) values(?, ?)";
+        String sql = "delete from friends where user_id = ? AND friend_id = ?";
         jdbcTemplate.update(sql, id, friendId);
         return userDbStorage.getUserById(id);
     }
@@ -43,22 +42,32 @@ public class UserDbService implements UserService {
                 + queryFriendFriendsId
                 + ") as ff on uf.friend_id = ff.friend_id";
         String sql = "select * from users where id in(" + queryCommonFriendsId + ")";
-        return new ArrayList<>(jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id, otherId));
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeUser(rs), id, otherId);
     }
 
     @Override
     public List<User> showFriends(Integer id) {
         String queryUserFriendsId = "select friend_id from friends where user_id = ?";
         String sql = "select * from users where id in(" + queryUserFriendsId + ")";
-        return new ArrayList<>(jdbcTemplate.query(sql, (rs, rowNum) -> makeUser(rs), id));
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeUser(rs), id);
     }
 
-    private User makeUser(ResultSet rs) throws SQLException {
-        Integer id = rs.getInt("id");
-        String email = rs.getString("email");
-        String name = rs.getString("name");
-        String login = rs.getString("login");
-        LocalDate birthday = rs.getDate("birthday").toLocalDate();
-        return new User(id, email, login, name, birthday);
+    private List<User> makeUser(ResultSet rs) throws SQLException {
+        List<User> users = new ArrayList<>();
+        do {
+            User user = new User();
+            user.setId(rs.getInt("id"));
+            user.setEmail(rs.getString("email"));
+            user.setName(rs.getString("name"));
+            user.setLogin(rs.getString("login"));
+            user.setBirthday(rs.getDate("birthday").toLocalDate());
+            do {
+                if (rs.getInt("friend_id") != 0) {
+                    user.friends.add(rs.getInt("friend_id"));
+                }
+            } while (rs.next() && rs.getInt("id") == user.getId());
+            users.add(user);
+        } while (!rs.isAfterLast());
+        return users;
     }
 }

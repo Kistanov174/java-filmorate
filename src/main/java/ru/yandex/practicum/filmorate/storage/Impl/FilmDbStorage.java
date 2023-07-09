@@ -110,7 +110,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private void validateForUpdate(Film film) {
         Integer id = film.getId();
-        if (jdbcTemplate.queryForList(sql).contains(id)) {
+        if (!jdbcTemplate.queryForList(sql).contains(id)) {
             log.info(String.format("Film with id = %d doesn't exist", id));
             throw new ObjectNotExistException(film + " doesn't exist " + FilmController.class.getSimpleName());
         }
@@ -119,7 +119,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private void validateForCreate(Film film) {
         Integer id = film.getId();
-        if (jdbcTemplate.queryForList(sql).contains(id)) {
+        if (!jdbcTemplate.queryForList(sql).contains(id)) {
             log.info(String.format("Film with id = %d doesn't exist", id));
             throw new ValidationException(film + " is already exist " + FilmController.class.getSimpleName());
         }
