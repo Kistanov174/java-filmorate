@@ -27,7 +27,7 @@ import java.util.*;
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
     private final Validator validator;
-    String sql = "select id from users";        ;
+    String sql = "select id from users";
 
     @Autowired
     public UserDbStorage(JdbcTemplate jdbcTemplate, Validator validator) {
