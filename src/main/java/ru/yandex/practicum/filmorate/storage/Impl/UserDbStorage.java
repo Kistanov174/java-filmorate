@@ -1,28 +1,38 @@
 package ru.yandex.practicum.filmorate.storage.Impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import ru.yandex.practicum.filmorate.controller.UserController;
+import ru.yandex.practicum.filmorate.exception.ObjectNotExistException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Valid;
+import javax.validation.Validator;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
+@Slf4j
 @Component("userDbStorage")
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final Validator validator;
+    String sql = "select id from users";        ;
 
     @Autowired
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
+    public UserDbStorage(JdbcTemplate jdbcTemplate, Validator validator) {
         this.jdbcTemplate = jdbcTemplate;
+        this.validator = validator;
     }
 
     @Override
@@ -38,7 +48,8 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public Optional<User> createUser(User user) {
+    public Optional<User> createUser(@Valid User user) {
+        validateForCreate(user);
         String sql = "insert into users(email, login, name, birthday) values(?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -53,7 +64,8 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public Optional<User> updateUser(User updatedUser) {
+    public Optional<User> updateUser(@Valid User updatedUser) {
+        validateForUpdate(updatedUser);
         String sql = "update users set email = ?, login = ?, name = ?, birthday = ? where id = ?";
         jdbcTemplate.update(sql,
                 updatedUser.getEmail(),
@@ -81,5 +93,35 @@ public class UserDbStorage implements UserStorage {
             users.add(user);
         } while (!rs.isAfterLast());
         return users;
+    }
+
+    private void validateForUpdate(User user) {
+        Integer id = user.getId();
+        if (jdbcTemplate.queryForList(sql).contains(id)) {
+            log.info(String.format("Film with id = %d doesn't exist", id));
+            throw new ObjectNotExistException(user + " doesn't exist " + UserController.class.getSimpleName());
+        }
+        validateUser(user);
+    }
+
+    private void validateForCreate(User user) {
+        Integer id = user.getId();
+        if (jdbcTemplate.queryForList(sql).contains(id)) {
+            log.info(String.format("Film with id = %d doesn't exist", id));
+            throw new ValidationException(user + " is already exist " + UserController.class.getSimpleName());
+        }
+        validateUser(user);
+    }
+
+    private void validateUser(User user) {
+        Set<ConstraintViolation<User>> constraintViolationSet = validator.validate(user);
+        if (!CollectionUtils.isEmpty(constraintViolationSet)) {
+            log.info("Validation failed - " + constraintViolationSet);
+            throw new ValidationException("Validation failed " + constraintViolationSet);
+        }
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin());
+            log.info("Name is absent, login is used");
+        }
     }
 }

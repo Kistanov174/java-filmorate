@@ -1,28 +1,36 @@
 package ru.yandex.practicum.filmorate.storage.Impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.exception.ObjectNotExistException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
+@Slf4j
 @Component("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
+    private final Validator validator;
+    String sql = "select id from films";
 
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
+    public FilmDbStorage(JdbcTemplate jdbcTemplate, Validator validator) {
         this.jdbcTemplate = jdbcTemplate;
+        this.validator = validator;
     }
 
     @Override
@@ -95,5 +103,31 @@ public class FilmDbStorage implements FilmStorage {
             film.setRate(film.getLikes().size());
         } while (!rs.isAfterLast());
         return films;
+    }
+
+    private void validateForUpdate(Film film) {
+        Integer id = film.getId();
+        if (jdbcTemplate.queryForList(sql).contains(id)) {
+            log.info(String.format("Film with id = %d doesn't exist", id));
+            throw new ObjectNotExistException(film + " doesn't exist " + FilmController.class.getSimpleName());
+        }
+        validateFilm(film);
+    }
+
+    private void validateForCreate(Film film) {
+        Integer id = film.getId();
+        if (jdbcTemplate.queryForList(sql).contains(id)) {
+            log.info(String.format("Film with id = %d doesn't exist", id));
+            throw new ValidationException(film + " is already exist " + FilmController.class.getSimpleName());
+        }
+        validateFilm(film);
+    }
+
+    private void validateFilm(Film film) {
+        Set<ConstraintViolation<Film>> constraintViolationSet = validator.validate(film);
+        if (!CollectionUtils.isEmpty(constraintViolationSet)) {
+            log.info("Validation failed - " + constraintViolationSet);
+            throw new ValidationException("Validation failed " + constraintViolationSet);
+        }
     }
 }
