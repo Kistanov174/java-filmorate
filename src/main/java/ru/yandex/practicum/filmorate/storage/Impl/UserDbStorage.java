@@ -43,12 +43,15 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Optional<User> getUserById(Integer id) {
         String sql = "select * from users as u left join friends as f on u.id = f.user_id where u.id = ?";
-        return Objects.requireNonNull(jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeUser(rs), id)).stream().findFirst();
+        return Optional.of(jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeUser(rs), id)
+                .stream().findFirst())
+                .orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " doesn't exist " +
+                        UserController.class.getSimpleName()));
     }
 
     @Override
     public Optional<User> createUser(@Valid User user) {
-        validateForCreate(user);
+        validateUser(user);
         String sql = "insert into users(email, login, name, birthday) values(?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -64,7 +67,10 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> updateUser(@Valid User updatedUser) {
-        validateForUpdate(updatedUser);
+        Integer id = updatedUser.getId();
+        getUserById(id).orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " doesn't exist " +
+                UserController.class.getSimpleName()));
+        validateUser(updatedUser);
         String sql = "update users set email = ?, login = ?, name = ?, birthday = ? where id = ?";
         jdbcTemplate.update(sql,
                 updatedUser.getEmail(),
@@ -72,7 +78,7 @@ public class UserDbStorage implements UserStorage {
                 updatedUser.getName(),
                 updatedUser.getBirthday(),
                 updatedUser.getId());
-        return getUserById(Objects.requireNonNull(updatedUser.getId()));
+        return getUserById(Objects.requireNonNull(id));
     }
 
     private List<User> makeUser(ResultSet rs) throws SQLException {
@@ -94,19 +100,10 @@ public class UserDbStorage implements UserStorage {
         return users;
     }
 
-    private void validateForUpdate(User user) {
-        Integer id = user.getId();
-        if (!jdbcTemplate.queryForList(sql).contains(id)) {
-            log.info(String.format("Film with id = %d doesn't exist", id));
-            throw new ObjectNotFoundException(user + " doesn't exist " + UserController.class.getSimpleName());
-        }
-        validateUser(user);
-    }
-
     private void validateForCreate(User user) {
         Integer id = user.getId();
-        if (jdbcTemplate.queryForList(sql).contains(id)) {
-            log.info(String.format("Film with id = %d doesn't exist", id));
+        if (getUserById(id).isPresent()) {
+            log.info(String.format("Film with id = %d already exist", id));
             throw new ValidationException(user + " is already exist " + UserController.class.getSimpleName());
         }
         validateUser(user);
