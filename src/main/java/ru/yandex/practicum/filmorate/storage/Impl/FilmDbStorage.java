@@ -52,7 +52,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> createFilm(@Valid Film film) {
-        validateForCreate(film);
+        validateFilm(film);
         String sql = "insert into films(name, description, release_date, duration, mpa_Id)" +
                 " values(?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -70,7 +70,7 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<Film> updateFilm(@Valid Film film) {
-        validateForUpdate(film);
+        validateFilm(film);
         String sql = "update films set name = ?, description = ?, release_Date = ?, duration = ?, mpa_Id = ?" +
                 " where id = ?";
         jdbcTemplate.update(sql,
