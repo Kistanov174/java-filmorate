@@ -12,6 +12,10 @@ import java.util.Set;
 @Data
 @AllArgsConstructor
 public class Film {
+    public Film() {
+
+    }
+
     @Null(groups = Marker.OnCreate.class)
     @NotNull(groups = Marker.OnUpdate.class)
     private Integer id;
@@ -23,6 +27,8 @@ public class Film {
     private LocalDate releaseDate;
     @Min(0)
     private Integer duration;
-    private int rate = 0;
+    private Integer rate;
+    private Mpa mpa;
+    private final Set<Genre> genres = new HashSet<>();
     public final Set<Integer> likes = new HashSet<>();
 }
