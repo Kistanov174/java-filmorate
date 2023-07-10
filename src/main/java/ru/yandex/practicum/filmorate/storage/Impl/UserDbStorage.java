@@ -51,7 +51,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> createUser(@Valid User user) {
-        //validateForCreate(user);
+        validateForCreate(user);
         String sql = "insert into users(email, login, name, birthday) values(?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
