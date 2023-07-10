@@ -51,7 +51,7 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<User> createUser(@Valid User user) {
-        validateUser(user);
+        //validateForCreate(user);
         String sql = "insert into users(email, login, name, birthday) values(?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
@@ -98,6 +98,17 @@ public class UserDbStorage implements UserStorage {
             users.add(user);
         } while (!rs.isAfterLast());
         return users;
+    }
+
+    private void validateForUpdate(User user) {
+        Integer id = user.getId();
+        getUserById(id).orElseThrow(() -> new ObjectNotFoundException(user + " doesn't exist " + UserController.class.getSimpleName()));
+
+        if (getUserById(id).get().getId().equals(id)) {
+            log.info(String.format("User with id = %d doesn't exist", id));
+            throw new ObjectNotFoundException(user + " doesn't exist " + UserController.class.getSimpleName());
+        }
+        validateUser(user);
     }
 
     private void validateForCreate(User user) {

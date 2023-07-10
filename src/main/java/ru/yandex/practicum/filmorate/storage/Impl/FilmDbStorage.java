@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ObjectNotExistException;
+import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -46,8 +47,10 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "select * " +
                 "from films as f left join film_likes as fl on f.id = fl.film_id " +
                 "left join film_genre as fg on f.id = fg.film_id where f.id = ?";
-        return Objects.requireNonNull(jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeFilm(rs), id))
-                .stream().findFirst();
+        Film film = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeFilm(rs), id).get(0);
+        if (film == null) {throw new ObjectNotFoundException("");
+        }
+        return Optional.of(film);
     }
 
     @Override
