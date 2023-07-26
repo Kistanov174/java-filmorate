@@ -17,19 +17,18 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class GenreDbStorage {
     private final JdbcTemplate jdbcTemplate;
+    private static final String SELECT_GENRE_BY_ID = "select * from genres where genre_id = ?";
+    private static final String SELECT_ALL_GENRES = "select * from genres order by genre_id";
 
     public Optional<Genre> getGenreById(Integer id) {
-        String sql = "select * from genres where genre_id = ?";
-        return Optional.of(Objects.requireNonNull(jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeGenre(rs), id))
-                        .stream()
-                        .findFirst())
+        return Optional.of(Objects.requireNonNull(jdbcTemplate.queryForObject(SELECT_GENRE_BY_ID,
+                                (rs, rowNum) -> makeGenre(rs), id)).stream().findFirst())
                 .orElseThrow(() -> new ObjectNotFoundException("Genre with id = " + id + " doesn't exist." +
                         GenreController.class.getSimpleName()));
     }
 
     public Optional<List<Genre>> getAllGenres() {
-        String sql = "select * from genres order by genre_id";
-        return Optional.of(jdbcTemplate.queryForStream(sql, (rs, rowNum) -> makeGenre(rs)).findFirst()
+        return Optional.of(jdbcTemplate.queryForStream(SELECT_ALL_GENRES, (rs, rowNum) -> makeGenre(rs)).findFirst()
                 .orElseGet(ArrayList::new));
     }
 

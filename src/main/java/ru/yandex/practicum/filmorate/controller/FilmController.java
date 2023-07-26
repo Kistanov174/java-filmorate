@@ -54,14 +54,14 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Optional<Film> addLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public void addLike(@PathVariable Integer id, @PathVariable Integer userId) {
         log.info("Request to like the movie");
-        return filmDbService.addLike(id, userId);
+        filmDbService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Optional<Film> deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public void deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
         log.info("Request to delete a movie like");
-        return filmDbService.deleteLike(id, userId);
+        filmDbService.deleteLike(id, userId);
     }
 }

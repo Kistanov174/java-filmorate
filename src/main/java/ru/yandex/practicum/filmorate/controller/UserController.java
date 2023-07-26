@@ -64,14 +64,14 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public Optional<User> addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
+    public void addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("Friend Request");
-        return userService.addFriend(id, friendId);
+        userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public Optional<User> deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+    public void deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("Request to remove from friends");
-        return userService.deleteFriend(id, friendId);
+        userService.deleteFriend(id, friendId);
     }
 }

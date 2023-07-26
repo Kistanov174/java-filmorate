@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,20 +22,18 @@ public class InMemoryFilmService {
         this.filmStorage = filmDbStorage;
     }
 
-    public Optional<Film> addLike(Integer id, Integer userId) {
+    public void addLike(Integer id, Integer userId) {
         filmStorage.getFilmById(id).get().likes.add(userId);
         log.info(String.format("The film with id = %d has been like by user with id = %d", id, userId));
-        return filmStorage.getFilmById(id);
     }
 
-    public Optional<Film> deleteLike(Integer id, Integer userId) {
+    public void deleteLike(Integer id, Integer userId) {
         if (!filmStorage.getFilmById(id).get().likes.contains(userId)) {
             throw new ObjectNotFoundException(String.format("The film with id = %d doesn't have like from user with" +
                     " id = %d", id, userId));
         }
         filmStorage.getFilmById(id).get().likes.remove(userId);
         log.info(String.format("The movie with id = %d has been unliked by user with id = %d", id, userId));
-        return filmStorage.getFilmById(id);
     }
 
     public List<Film> showMostPopularFilms(Integer count) {

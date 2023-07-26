@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.List;
-import java.util.Optional;
 
 @Service("filmDbService")
 @RequiredArgsConstructor
@@ -16,35 +15,33 @@ public class FilmDbService implements FilmService {
     private final FilmStorage filmDbStorage;
     private final UserDbService userDbService;
     private final FilmMaker filmMaker;
+    private static final String INSERT_INTO_FILM_LIKES = "insert into film_likes(film_id, user_id) values(?, ?)";
+    private static final String DELETE_INTO_FILM_LIKES = "delete from film_likes where film_id = ? and user_id = ?";
+    private static final String SELECT_MOST_POPULAR_FILMS = "select f.id, f.name, f.description, f.duration, " +
+            "f.release_Date, f.mpa_id, mr.mpa_name, fg.genre_id, g.genre_name, fl.user_id," +
+            "count(fl.user_id) as rate " +
+            "from films as f left join film_likes as fl on f.id = fl.film_id " +
+            "left join film_genre as fg on f.id = fg.film_id " +
+            "left join genres as g on fg.genre_id = g.genre_id " +
+            "left join mpa_ratings as mr on f.mpa_id = mr.mpa_id " +
+            "group by f.id, fl.user_id " +
+            "order by rate desc " +
+            "limit ?";
 
     @Override
-    public Optional<Film> addLike(Integer id, Integer userId) {
-        String sql = "insert into film_likes(film_id, user_id) values(?, ?)";
+    public void addLike(Integer id, Integer userId) {
         userDbService.checkUser(userId);
-        jdbcTemplate.update(sql, id, userId);
-        return filmDbStorage.getFilmById(id);
+        jdbcTemplate.update(INSERT_INTO_FILM_LIKES, id, userId);
     }
 
     @Override
-    public Optional<Film> deleteLike(Integer id, Integer userId) {
-        String sql = "delete from film_likes where film_id = ? and user_id = ?";
+    public void deleteLike(Integer id, Integer userId) {
         userDbService.checkUser(userId);
-        jdbcTemplate.update(sql, id, userId);
-        return filmDbStorage.getFilmById(id);
+        jdbcTemplate.update(DELETE_INTO_FILM_LIKES, id, userId);
     }
 
     @Override
     public List<Film> showMostPopularFilms(Integer limit) {
-        String sql = "select f.id, f.name, f.description, f.duration, f.release_Date, f.mpa_id, mr.mpa_name, " +
-                "fg.genre_id, g.genre_name, fl.user_id," +
-                "count(fl.user_id) as rate " +
-                "from films as f left join film_likes as fl on f.id = fl.film_id " +
-                "left join film_genre as fg on f.id = fg.film_id " +
-                "left join genres as g on fg.genre_id = g.genre_id " +
-                "left join mpa_ratings as mr on f.mpa_id = mr.mpa_id " +
-                "group by f.id, fl.user_id " +
-                "order by rate desc " +
-                "limit " + limit;
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> filmMaker.makeFilm(rs));
+        return jdbcTemplate.queryForObject(SELECT_MOST_POPULAR_FILMS, (rs, rowNum) -> filmMaker.makeFilm(rs), limit);
     }
 }

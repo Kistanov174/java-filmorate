@@ -19,42 +19,37 @@ public class UserDbService implements UserService {
     private final JdbcTemplate jdbcTemplate;
     private final UserStorage userDbStorage;
     private final UserMaker userMaker;
+    private static final String INSERT_INTO_FRIENDS = "insert into friends(user_id, friend_id) values(?, ?)";
+    private static final String DELETE_FROM_FRIENDS = "delete from friends where user_id = ? AND friend_id = ?";
+    private static final String SELECT_COMMON_FRIENDS = "select * " +
+            "from users as u left join friends as f on u.id = f.user_id where u.id in" +
+            "(select uf.friend_id from (select friend_id from friends where user_id = ?) as uf " +
+            "inner join (select friend_id from friends where user_id = ?) as ff on uf.friend_id = ff.friend_id)";
+    private static final String SELECT_FRIENDS = "select * " +
+            "from users as u left join friends as f on u.id = f.user_id where u.id in" +
+            "(select friend_id from friends where user_id = ?)";
 
     @Override
-    public Optional<User> addFriend(Integer id, Integer friendId) {
-        String sql = "insert into friends(user_id, friend_id) values(?, ?)";
+    public void addFriend(Integer id, Integer friendId) {
         friendId = checkUser(friendId);
-        jdbcTemplate.update(sql, id, friendId);
-        return userDbStorage.getUserById(id);
+        jdbcTemplate.update(INSERT_INTO_FRIENDS, id, friendId);
     }
 
     @Override
-    public Optional<User> deleteFriend(Integer id, Integer friendId) {
-        String sql = "delete from friends where user_id = ? AND friend_id = ?";
+    public void deleteFriend(Integer id, Integer friendId) {
         friendId = checkUser(friendId);
-        jdbcTemplate.update(sql, id, friendId);
-        return userDbStorage.getUserById(id);
+        jdbcTemplate.update(DELETE_FROM_FRIENDS, id, friendId);
     }
 
     @Override
     public List<User> showCommonFriends(Integer id, Integer otherId) {
-        String queryUserFriendsId = "select friend_id from friends where user_id = ?";
-        String queryFriendFriendsId = "select friend_id from friends where user_id = ?";
-        String queryCommonFriendsId = "select uf.friend_id from (" + queryUserFriendsId + ") as uf inner join ("
-                + queryFriendFriendsId
-                + ") as ff on uf.friend_id = ff.friend_id";
-        String sql = "select * " +
-               "from users as u left join friends as f on u.id = f.user_id where u.id in(" + queryCommonFriendsId + ")";
-        return jdbcTemplate.query(sql,
+        return jdbcTemplate.query(SELECT_COMMON_FRIENDS,
                 (rs, rowNum) -> userMaker.makeUser(rs), id, otherId).stream().findFirst().orElseGet(ArrayList::new);
     }
 
     @Override
     public List<User> showFriends(Integer id) {
-        String queryUserFriendsId = "select friend_id from friends where user_id = ?";
-        String sql = "select * " +
-                "from users as u left join friends as f on u.id = f.user_id where u.id in(" + queryUserFriendsId + ")";
-        return jdbcTemplate.query(sql,
+        return jdbcTemplate.query(SELECT_FRIENDS,
                 (rs, rowNum) -> userMaker.makeUser(rs), id).stream().findFirst().orElseGet(ArrayList::new);
     }
 

@@ -14,15 +14,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MpaDbStorage {
     private final JdbcTemplate jdbcTemplate;
+    private static final String SELECT_MPA_RATING_BY_ID = "select * from mpa_ratings where mpa_id = ?";
+    private static final String SELECT_ALL_MPA_RATINGS = "select * from mpa_ratings order by mpa_id";
 
     public Mpa getMpaById(Integer id) {
-        String sql = "select * from mpa_ratings where mpa_id = ?";
-        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> makeMpa(rs), id);
+        return jdbcTemplate.queryForObject(SELECT_MPA_RATING_BY_ID, (rs, rowNum) -> makeMpa(rs), id);
     }
 
     public List<Mpa> getAllMpa() {
-        String sql = "select * from mpa_ratings order by mpa_id";
-        return jdbcTemplate.query(sql, (rs, rowNum) -> makeMpa(rs));
+        return jdbcTemplate.query(SELECT_ALL_MPA_RATINGS, (rs, rowNum) -> makeMpa(rs));
     }
 
     private Mpa makeMpa(ResultSet rs) throws SQLException {

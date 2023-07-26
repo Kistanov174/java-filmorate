@@ -22,21 +22,19 @@ public class InMemoryUserService {
         this.userStorage = userDbStorage;
     }
 
-    public User addFriend(Integer id, Integer friendId) {
+    public void addFriend(Integer id, Integer friendId) {
         userStorage.getUserById(id).get().friends.add(friendId);
         userStorage.getUserById(friendId).get().friends.add(id);
         log.info(String.format("User with id = %d has been added to the user's friends with id = %d", friendId, id));
-        return userStorage.getUserById(id).get();
     }
 
-    public User deleteFriend(Integer id, Integer friendId) {
+    public void deleteFriend(Integer id, Integer friendId) {
         if (!userStorage.getUserById(id).get().friends.contains(friendId)) {
             throw new ObjectNotFoundException(String.format("The user doesn't have friend with id = %d", friendId));
         }
         userStorage.getUserById(id).get().friends.remove(friendId);
         userStorage.getUserById(friendId).get().friends.remove(id);
         log.info(String.format("User with id = %d has been deleted from the user's friends with id = %d", friendId, id));
-        return userStorage.getUserById(id).get();
     }
 
     public List<Optional<User>> showCommonFriends(Integer id, Integer otherId) {

@@ -14,13 +14,36 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import javax.validation.Valid;
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Component("filmDbStorage")
 public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private final FilmMaker filmMaker;
+    private static final String SELECT_ALL_FILMS = "select * " +
+            "from films as f left join film_likes as fl on f.id = fl.film_id " +
+            "left join film_genre as fg on f.id = fg.film_id " +
+            "left join genres as g on fg.genre_id = g.genre_id " +
+            "left join mpa_ratings as mr on f.mpa_id = mr.mpa_id ";
+    private static final String SELECT_FILM_BY_ID = "select * " +
+            "from films as f left join film_likes as fl on f.id = fl.film_id " +
+            "left join film_genre as fg on f.id = fg.film_id " +
+            "left join genres as g on fg.genre_id = g.genre_id " +
+            "left join mpa_ratings as mr on f.mpa_id = mr.mpa_id " +
+            "where f.id = ?";
+    private static final String INSERT_INTO_FILMS = "insert into films(name, description, " +
+            "release_date, duration, mpa_Id) " +
+            "values(?, ?, ?, ?, ?)";
+    private static final String UPDATE_FILMS = "update films set name = ?, description = ?, " +
+            "release_Date = ?, duration = ?, mpa_Id = ? " +
+            "where id = ?";
+    private static final String DELETE_FROM_FILM_GENRE = "delete from film_genre where film_id = ?";
+    private static final String INSERT_INTO_FILM_GENRE = "insert into film_genre values(?, ?)";
 
     public FilmDbStorage(JdbcTemplate jdbcTemplate, FilmMaker filmMaker) {
         this.jdbcTemplate = jdbcTemplate;
@@ -29,24 +52,14 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Optional<List<Film>> getAllFilms() {
-        String sql = "select * " +
-                "from films as f left join film_likes as fl on f.id = fl.film_id " +
-                "left join film_genre as fg on f.id = fg.film_id " +
-                "left join genres as g on fg.genre_id = g.genre_id " +
-                "left join mpa_ratings as mr on f.mpa_id = mr.mpa_id ";
-        return Optional.of(jdbcTemplate.queryForStream(sql, (rs, rowNum) -> filmMaker.makeFilm(rs)).findFirst()
+        return Optional.of(jdbcTemplate.queryForStream(SELECT_ALL_FILMS, (rs, rowNum) -> filmMaker.makeFilm(rs))
+                .findFirst()
                 .orElseGet(ArrayList::new));
     }
 
     @Override
     public Optional<Film> getFilmById(Integer id) {
-        String sql = "select * " +
-                "from films as f left join film_likes as fl on f.id = fl.film_id " +
-                "left join film_genre as fg on f.id = fg.film_id " +
-                "left join genres as g on fg.genre_id = g.genre_id " +
-                "left join mpa_ratings as mr on f.mpa_id = mr.mpa_id " +
-                "where f.id = ?";
-        return Optional.of(Objects.requireNonNull(jdbcTemplate.queryForObject(sql,
+        return Optional.of(Objects.requireNonNull(jdbcTemplate.queryForObject(SELECT_FILM_BY_ID,
                                 (rs, rowNum) -> filmMaker.makeFilm(rs), id))
                 .stream()
                         .findFirst())
@@ -57,11 +70,9 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Optional<Film> createFilm(@Valid Film film) {
         filmMaker.validateFilm(film);
-        String sql = "insert into films(name, description, release_date, duration, mpa_Id)" +
-                " values(?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"id"});
+            PreparedStatement stmt = connection.prepareStatement(INSERT_INTO_FILMS, new String[]{"id"});
             stmt.setString(1, film.getName());
             stmt.setString(2, film.getDescription());
             stmt.setDate(3, Date.valueOf(film.getReleaseDate()));
@@ -70,7 +81,8 @@ public class FilmDbStorage implements FilmStorage {
             return stmt;
         }, keyHolder);
         updateGenre(Objects.requireNonNull(keyHolder.getKey()).intValue(), film.getGenres());
-        return getFilmById((Objects.requireNonNull(keyHolder.getKey())).intValue());
+        film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+        return Optional.of(film);
     }
 
     @Override
@@ -79,25 +91,21 @@ public class FilmDbStorage implements FilmStorage {
         getFilmById(id).orElseThrow(() -> new ObjectNotFoundException("Film with id = " + id + " doesn't exist " +
                 FilmController.class.getSimpleName()));
         filmMaker.validateFilm(film);
-        String sql = "update films set name = ?, description = ?, release_Date = ?, duration = ?, mpa_Id = ?" +
-                " where id = ?";
-        jdbcTemplate.update(sql,
+        jdbcTemplate.update(UPDATE_FILMS,
                 film.getName(),
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
                 film.getDuration(),
                 film.getMpa().getId(),
                 film.getId());
-        updateGenre(film.getId(), film.getGenres());
-        return getFilmById(Objects.requireNonNull(film.getId()));
+        updateGenre(id, film.getGenres());
+        return getFilmById(id);
     }
 
     private void updateGenre(int filmId, Collection<Genre> genreId) {
-        String sqlDelete = "delete from film_genre where film_id = ?";
-        jdbcTemplate.update(sqlDelete, filmId);
+        jdbcTemplate.update(DELETE_FROM_FILM_GENRE, filmId);
         for (Genre genre : genreId) {
-            String sqlAdd = "insert into film_genre values(?, ?)";
-            jdbcTemplate.update(sqlAdd, filmId, genre.getId());
+            jdbcTemplate.update(INSERT_INTO_FILM_GENRE, filmId, genre.getId());
         }
     }
 }

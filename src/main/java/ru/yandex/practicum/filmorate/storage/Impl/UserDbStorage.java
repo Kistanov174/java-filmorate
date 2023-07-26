@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.Impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -14,13 +15,25 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import javax.validation.Valid;
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.util.*;
+import java.util.Objects;
+import java.util.List;
+import java.util.Optional;
+import java.util.ArrayList;
 
 @Slf4j
 @Component("userDbStorage")
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
     private final UserMaker userMaker;
+    private static final int EXPECTED_SIZE = 1;
+    private static final String SELECT_ALL_USERS = "select * " +
+            "from users as u left join friends as f on u.id = f.user_id order by u.id";
+    private static final String SELECT_USER_BY_ID = "select * " +
+            "from users as u left join friends as f on u.id = f.user_id where u.id = ?";
+    private static final String INSERT_INTO_USERS = "insert into users(email, login, name, birthday) " +
+            "values(?, ?, ?, ?)";
+    private static final String UPDATE_USERS = "update users " +
+            "set email = ?, login = ?, name = ?, birthday = ? where id = ?";
 
     @Autowired
     public UserDbStorage(JdbcTemplate jdbcTemplate, UserMaker userMaker) {
@@ -30,15 +43,15 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public Optional<List<User>> getAllUsers() {
-        String sql = "select * from users as u left join friends as f on u.id = f.user_id order by u.id";
-        return Optional.of(jdbcTemplate.queryForStream(sql, (rs, rowNum) -> userMaker.makeUser(rs)).findFirst()
+        return Optional.of(jdbcTemplate.queryForStream(SELECT_ALL_USERS,
+                        (rs, rowNum) -> userMaker.makeUser(rs))
+                .findFirst()
                 .orElseGet(ArrayList::new));
     }
 
     @Override
     public Optional<User> getUserById(Integer id) {
-        String sql = "select * from users as u left join friends as f on u.id = f.user_id where u.id = ?";
-        return Optional.of(Objects.requireNonNull(jdbcTemplate.queryForObject(sql,
+        return Optional.of(Objects.requireNonNull(jdbcTemplate.queryForObject(SELECT_USER_BY_ID,
                                 (rs, rowNum) -> userMaker.makeUser(rs), id))
                 .stream()
                         .findFirst())
@@ -49,32 +62,35 @@ public class UserDbStorage implements UserStorage {
     @Override
     public Optional<User> createUser(@Valid User user) {
         userMaker.validateUser(user);
-        String sql = "insert into users(email, login, name, birthday) values(?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
-            PreparedStatement stmt = connection.prepareStatement(sql, new String[]{"id"});
+            PreparedStatement stmt = connection.prepareStatement(INSERT_INTO_USERS, new String[]{"id"});
             stmt.setString(1, user.getEmail());
             stmt.setString(2, user.getLogin());
             stmt.setString(3, user.getName());
             stmt.setDate(4, Date.valueOf(user.getBirthday()));
             return stmt;
         }, keyHolder);
-        return getUserById(Objects.requireNonNull(keyHolder.getKey()).intValue());
+        user.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
+        return Optional.of(user);
     }
 
     @Override
     public Optional<User> updateUser(@Valid User updatedUser) {
-        Integer id = updatedUser.getId();
+        int id = updatedUser.getId();
         getUserById(id).orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " doesn't exist " +
                 UserController.class.getSimpleName()));
         userMaker.validateUser(updatedUser);
-        String sql = "update users set email = ?, login = ?, name = ?, birthday = ? where id = ?";
-        jdbcTemplate.update(sql,
+        int numUpdatedRow = jdbcTemplate.update(UPDATE_USERS,
                 updatedUser.getEmail(),
                 updatedUser.getLogin(),
                 updatedUser.getName(),
                 updatedUser.getBirthday(),
                 updatedUser.getId());
-        return getUserById(Objects.requireNonNull(id));
+        if (numUpdatedRow == 1) {
+            return Optional.of(updatedUser);
+        } else {
+            throw new EmptyResultDataAccessException(EXPECTED_SIZE);
+        }
     }
 }
