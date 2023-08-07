@@ -8,8 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.Impl.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.Impl.UserDbStorage;
+import ru.yandex.practicum.filmorate.dao.Impl.FilmDaoImpl;
+import ru.yandex.practicum.filmorate.dao.Impl.UserDaoImpl;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import java.time.LocalDate;
 import java.util.List;
@@ -19,8 +19,8 @@ import java.util.Optional;
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class FilmorateApplicationTests {
-	private final UserDbStorage userStorage;
-	private final FilmDbStorage filmStorage;
+	private final UserDaoImpl userStorage;
+	private final FilmDaoImpl filmStorage;
 
 	@Test
 	public void testCreateAndUpdateUser() {
@@ -54,7 +54,8 @@ class FilmorateApplicationTests {
 	private void updateUser() {
 		Optional<User> user = userStorage.getUserById(1);
 		user.ifPresent(value -> value.setName("newName"));
-		Optional<User> userOptional = userStorage.updateUser(user.get());
+		userStorage.updateUser(user.get());
+		Optional<User> userOptional = userStorage.getUserById(user.get().getId());
 		assertThat(userOptional)
 				.isPresent()
 				.hasValueSatisfying(updatedUser ->

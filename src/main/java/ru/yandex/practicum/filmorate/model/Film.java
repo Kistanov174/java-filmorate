@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.annotation.ReleaseDate;
 import ru.yandex.practicum.filmorate.validation.Marker;
 import javax.validation.constraints.*;
@@ -11,11 +12,8 @@ import java.util.Set;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class Film {
-    public Film() {
-
-    }
-
     @Null(groups = Marker.OnCreate.class)
     @NotNull(groups = Marker.OnUpdate.class)
     private Integer id;

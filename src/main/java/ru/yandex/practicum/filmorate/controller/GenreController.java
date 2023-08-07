@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.yandex.practicum.filmorate.dao.GenreDao;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.Impl.GenreDbStorage;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,17 +16,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @RequestMapping("/genres")
 public class GenreController {
-    private final GenreDbStorage genreDbStorage;
+    private final GenreDao genreDao;
 
     @GetMapping
     public Optional<List<Genre>> getAllGenres() {
         log.info("Request to get all genres");
-        return genreDbStorage.getAllGenres();
+        return genreDao.getAllGenres();
     }
 
     @GetMapping("/{id}")
     public Optional<Genre> getGenreById(@PathVariable Integer id) {
         log.info("Request to get genre by id");
-        return genreDbStorage.getGenreById(id);
+        return genreDao.getGenreById(id);
     }
 }
