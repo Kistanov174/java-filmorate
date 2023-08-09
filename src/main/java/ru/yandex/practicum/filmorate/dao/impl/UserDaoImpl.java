@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dao.Impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,27 +7,23 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.dao.UserDao;
-import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
-import javax.validation.Validator;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Objects;
+import java.util.List;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class UserDaoImpl implements UserDao {
     private final JdbcTemplate jdbcTemplate;
-    private final Validator validator;
     private static final int EXPECTED_SIZE = 1;
     private static final String SELECT_ALL_USERS = "select * " +
             "from users as u left join friends as f on u.id = f.user_id order by u.id";
@@ -62,12 +58,11 @@ public class UserDaoImpl implements UserDao {
                 .stream()
                         .findFirst())
                 .orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " doesn't exist " +
-                        UserController.class.getSimpleName()));
+                        UserDaoImpl.class.getSimpleName()));
     }
 
     @Override
-    public Optional<User> createUser(@Valid User user) {
-        validateUser(user);
+    public Optional<Integer> createUser(User user) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(INSERT_INTO_USERS, new String[]{"id"});
@@ -77,16 +72,11 @@ public class UserDaoImpl implements UserDao {
             stmt.setDate(4, Date.valueOf(user.getBirthday()));
             return stmt;
         }, keyHolder);
-        user.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
-        return Optional.of(user);
+        return Optional.of(Objects.requireNonNull(keyHolder.getKey()).intValue());
     }
 
     @Override
-    public void updateUser(@Valid User updatedUser) {
-        int id = updatedUser.getId();
-        getUserById(id).orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " doesn't exist " +
-                UserController.class.getSimpleName()));
-        validateUser(updatedUser);
+    public void updateUser(User updatedUser) {
         int numUpdatedRow = jdbcTemplate.update(UPDATE_USERS,
                 updatedUser.getEmail(),
                 updatedUser.getLogin(),
@@ -100,13 +90,11 @@ public class UserDaoImpl implements UserDao {
 
     @Override
     public void addFriend(Integer id, Integer friendId) {
-        friendId = checkUser(friendId);
         jdbcTemplate.update(INSERT_INTO_FRIENDS, id, friendId);
     }
 
     @Override
     public void deleteFriend(Integer id, Integer friendId) {
-        friendId = checkUser(friendId);
         jdbcTemplate.update(DELETE_FROM_FRIENDS, id, friendId);
     }
 
@@ -122,14 +110,7 @@ public class UserDaoImpl implements UserDao {
                 (rs, rowNum) -> makeUser(rs), id).stream().findFirst().orElseGet(ArrayList::new);
     }
 
-    public Integer checkUser(final Integer friendId) {
-        Optional<User> friend = getUserById(friendId);
-        return friend.map(User::getId)
-                .orElseThrow(() -> new ObjectNotFoundException("User with id = " + friendId + " doesn't exist " +
-                        UserDaoImpl.class.getSimpleName()));
-    }
-
-    public List<User> makeUser(ResultSet rs) throws SQLException {
+    private List<User> makeUser(ResultSet rs) throws SQLException {
         List<User> users = new ArrayList<>();
         do {
             User user = new User();
@@ -146,17 +127,5 @@ public class UserDaoImpl implements UserDao {
             users.add(user);
         } while (!rs.isAfterLast());
         return users;
-    }
-
-    public void validateUser(User user) {
-        Set<ConstraintViolation<User>> constraintViolationSet = validator.validate(user);
-        if (!CollectionUtils.isEmpty(constraintViolationSet)) {
-            log.info("Validation failed - " + constraintViolationSet);
-            throw new ValidationException("Validation failed " + constraintViolationSet);
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-            log.info("Name is absent, login is used");
-        }
     }
 }

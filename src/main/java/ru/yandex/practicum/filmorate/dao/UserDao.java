@@ -9,7 +9,7 @@ public interface UserDao {
 
     Optional<User> getUserById(Integer id);
 
-    Optional<User> createUser(User user);
+    Optional<Integer> createUser(User user);
 
     void updateUser(User updatedUser);
 

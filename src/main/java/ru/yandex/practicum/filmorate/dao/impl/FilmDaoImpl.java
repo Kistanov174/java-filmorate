@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dao.Impl;
+package ru.yandex.practicum.filmorate.dao.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,30 +6,26 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.exception.ObjectNotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.dao.FilmDao;
-import javax.validation.ConstraintViolation;
-import javax.validation.Valid;
-import javax.validation.Validator;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.Objects;
+import java.util.Collection;
+import java.util.List;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class FilmDaoImpl implements FilmDao {
     private final JdbcTemplate jdbcTemplate;
-    private final UserDaoImpl userDbStorage;
-    private final Validator validator;
     private static final String INSERT_INTO_FILM_LIKES = "insert into film_likes(film_id, user_id) values(?, ?)";
     private static final String DELETE_INTO_FILM_LIKES = "delete from film_likes where film_id = ? and user_id = ?";
     private static final String SELECT_MOST_POPULAR_FILMS = "select f.id, f.name, f.description, f.duration, " +
@@ -76,12 +72,11 @@ public class FilmDaoImpl implements FilmDao {
                 .stream()
                         .findFirst())
                 .orElseThrow(() -> new ObjectNotFoundException("Film with id = " + id + " doesn't exist." +
-                        FilmController.class.getSimpleName()));
+                        FilmDaoImpl.class.getSimpleName()));
     }
 
     @Override
-    public Optional<Film> createFilm(@Valid Film film) {
-        validateFilm(film);
+    public Optional<Integer> createFilm(Film film) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement stmt = connection.prepareStatement(INSERT_INTO_FILMS, new String[]{"id"});
@@ -92,17 +87,13 @@ public class FilmDaoImpl implements FilmDao {
             stmt.setInt(5, film.getMpa().getId());
             return stmt;
         }, keyHolder);
-        updateGenre(Objects.requireNonNull(keyHolder.getKey()).intValue(), film.getGenres());
-        film.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
-        return Optional.of(film);
+        int id = Objects.requireNonNull(keyHolder.getKey()).intValue();
+        updateGenre(id, film.getGenres());
+        return Optional.of(id);
     }
 
     @Override
-    public void updateFilm(@Valid Film film) {
-        Integer id = film.getId();
-        getFilmById(id).orElseThrow(() -> new ObjectNotFoundException("Film with id = " + id + " doesn't exist " +
-                FilmController.class.getSimpleName()));
-        validateFilm(film);
+    public void updateFilm(Film film) {
         jdbcTemplate.update(UPDATE_FILMS,
                 film.getName(),
                 film.getDescription(),
@@ -110,29 +101,16 @@ public class FilmDaoImpl implements FilmDao {
                 film.getDuration(),
                 film.getMpa().getId(),
                 film.getId());
-        updateGenre(id, film.getGenres());
-    }
-
-    private void updateGenre(int filmId, Collection<Genre> genreId) {
-        jdbcTemplate.update(DELETE_FROM_FILM_GENRE, filmId);
-        List<Object[]> batch = new ArrayList<>();
-        for (Genre genre : genreId) {
-            Object[] values = new Object[] {
-                    filmId, genre.getId()};
-            batch.add(values);
-        }
-        this.jdbcTemplate.batchUpdate(INSERT_INTO_FILM_GENRE, batch);
+        updateGenre(film.getId(), film.getGenres());
     }
 
     @Override
     public void addLike(Integer id, Integer userId) {
-        userDbStorage.checkUser(userId);
         jdbcTemplate.update(INSERT_INTO_FILM_LIKES, id, userId);
     }
 
     @Override
     public void deleteLike(Integer id, Integer userId) {
-        userDbStorage.checkUser(userId);
         jdbcTemplate.update(DELETE_INTO_FILM_LIKES, id, userId);
     }
 
@@ -172,11 +150,14 @@ public class FilmDaoImpl implements FilmDao {
         return films;
     }
 
-    private void validateFilm(Film film) {
-        Set<ConstraintViolation<Film>> constraintViolationSet = validator.validate(film);
-        if (!CollectionUtils.isEmpty(constraintViolationSet)) {
-            log.info("Validation failed - " + constraintViolationSet);
-            throw new ValidationException("Validation failed " + constraintViolationSet);
+    private void updateGenre(int filmId, Collection<Genre> genreId) {
+        jdbcTemplate.update(DELETE_FROM_FILM_GENRE, filmId);
+        List<Object[]> batch = new ArrayList<>();
+        for (Genre genre : genreId) {
+            Object[] values = new Object[] {
+                    filmId, genre.getId()};
+            batch.add(values);
         }
+        this.jdbcTemplate.batchUpdate(INSERT_INTO_FILM_GENRE, batch);
     }
 }

@@ -9,7 +9,7 @@ public interface FilmDao {
 
     Optional<Film> getFilmById(Integer id);
 
-    Optional<Film> createFilm(Film film);
+    Optional<Integer> createFilm(Film film);
 
     void updateFilm(Film film);
 
