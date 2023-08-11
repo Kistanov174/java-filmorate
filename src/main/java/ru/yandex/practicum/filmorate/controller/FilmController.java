@@ -16,7 +16,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.validation.Marker;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Validated
@@ -27,13 +26,13 @@ public class FilmController {
     private final FilmService filmService;
 
     @GetMapping
-    public Optional<List<Film>> getAllFilms() {
+    public List<Film> getAllFilms() {
         log.info("Request to receive all movies");
         return filmService.findAllFilms();
     }
 
     @GetMapping("/{id}")
-    public Optional<Film> getFilmById(@PathVariable Integer id) {
+    public Film getFilmById(@PathVariable Integer id) {
         log.info("Request to receive a movie by ID");
         return filmService.findFilmById(id);
     }
@@ -45,26 +44,26 @@ public class FilmController {
     }
 
     @PostMapping
-    public Optional<Film> createFilm(@RequestBody Film film) {
+    public Film createFilm(@RequestBody Film film) {
         log.info("Request to create a new movie");
         return filmService.createFilm(film);
     }
 
     @PutMapping
     @Validated({Marker.OnUpdate.class})
-    public Optional<Film> updateFilm(@RequestBody Film updatedfilm) {
+    public Film updateFilm(@RequestBody Film updatedfilm) {
         log.info("Movie Update Request");
         return filmService.updateFilm(updatedfilm);
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Optional<Film> addLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public Film addLike(@PathVariable Integer id, @PathVariable Integer userId) {
         log.info("Request to like the movie");
         return filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Optional<Film> deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
+    public Film deleteLike(@PathVariable Integer id, @PathVariable Integer userId) {
         log.info("Request to delete a movie like");
         return filmService.deleteLike(id, userId);
     }

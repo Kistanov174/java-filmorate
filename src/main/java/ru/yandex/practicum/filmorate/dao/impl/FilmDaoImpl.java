@@ -115,8 +115,9 @@ public class FilmDaoImpl implements FilmDao {
     }
 
     @Override
-    public List<Film> showMostPopularFilms(Integer limit) {
-        return jdbcTemplate.queryForObject(SELECT_MOST_POPULAR_FILMS, (rs, rowNum) -> makeFilm(rs), limit);
+    public Optional<List<Film>> showMostPopularFilms(Integer limit) {
+        return Optional.ofNullable(jdbcTemplate.queryForObject(SELECT_MOST_POPULAR_FILMS,
+                (rs, rowNum) -> makeFilm(rs), limit));
     }
 
     private List<Film> makeFilm(ResultSet rs) throws SQLException {

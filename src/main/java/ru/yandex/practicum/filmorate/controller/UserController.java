@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Validated
@@ -25,13 +24,13 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public Optional<List<User>> getAllUsers() {
+    public List<User> getAllUsers() {
         log.info("Request to get all users");
         return userService.findAllUsers();
     }
 
     @GetMapping("/{id}")
-    public Optional<User> getUserById(@PathVariable Integer id) {
+    public User getUserById(@PathVariable Integer id) {
         log.info("Request to get a user by ID");
         return userService.findUserById(id);
     }
@@ -49,25 +48,25 @@ public class UserController {
     }
 
     @PostMapping
-    public Optional<User> createUser(@RequestBody User user) {
+    public User createUser(@RequestBody User user) {
         log.info("Request to add a new user");
         return userService.createUser(user);
     }
 
     @PutMapping
-    public Optional<User> updateUser(@RequestBody User updatedUser) {
+    public User updateUser(@RequestBody User updatedUser) {
         log.info("Request to update a user");
         return userService.updateUser(updatedUser);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public Optional<User> addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
+    public User addFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("Friend Request");
         return userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public Optional<User>  deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
+    public User  deleteFriend(@PathVariable Integer id, @PathVariable Integer friendId) {
         log.info("Request to remove from friends");
         return userService.deleteFriend(id, friendId);
     }

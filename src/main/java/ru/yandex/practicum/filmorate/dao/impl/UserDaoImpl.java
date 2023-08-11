@@ -99,15 +99,15 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public List<User> showCommonFriends(Integer id, Integer otherId) {
-        return jdbcTemplate.query(SELECT_COMMON_FRIENDS,
-                (rs, rowNum) -> makeUser(rs), id, otherId).stream().findFirst().orElseGet(ArrayList::new);
+    public Optional<List<User>> showCommonFriends(Integer id, Integer otherId) {
+        return Optional.of(jdbcTemplate.query(SELECT_COMMON_FRIENDS,
+                (rs, rowNum) -> makeUser(rs), id, otherId).stream().findFirst().orElseGet(ArrayList::new));
     }
 
     @Override
-    public List<User> showFriends(Integer id) {
-        return jdbcTemplate.query(SELECT_FRIENDS,
-                (rs, rowNum) -> makeUser(rs), id).stream().findFirst().orElseGet(ArrayList::new);
+    public Optional<List<User>> showFriends(Integer id) {
+        return Optional.of(jdbcTemplate.query(SELECT_FRIENDS,
+                (rs, rowNum) -> makeUser(rs), id).stream().findFirst().orElseGet(ArrayList::new));
     }
 
     private List<User> makeUser(ResultSet rs) throws SQLException {

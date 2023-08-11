@@ -14,7 +14,6 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -26,62 +25,71 @@ public class UserServiceImpl implements UserService {
     private static final int EXPECTED_SIZE = 1;
 
     @Override
-    public Optional<List<User>> findAllUsers() {
-        return userDao.getAllUsers();
+    public List<User> findAllUsers() {
+        return userDao.getAllUsers().orElseThrow(() -> new ObjectNotFoundException("Users haven't found"));
     }
 
     @Override
-    public Optional<User> findUserById(Integer id) {
-        return userDao.getUserById(id);
+    public User findUserById(Integer id) {
+        return userDao.getUserById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " hasn't found"));
     }
 
     @Override
-    public Optional<User> createUser(@Valid User user) {
+    public User createUser(@Valid User user) {
         validateUser(user);
         Integer id = userDao.createUser(user).orElseThrow(() -> new EmptyResultDataAccessException(EXPECTED_SIZE));
-        return userDao.getUserById(id);
+        return userDao.getUserById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Created user with id = " + id + " hasn't found in DB"));
     }
 
     @Override
-    public Optional<User> updateUser(@Valid User updatedUser) {
+    public User updateUser(@Valid User updatedUser) {
         validateUser(updatedUser);
         int id = updatedUser.getId();
         userDao.getUserById(id).orElseThrow(() -> new ObjectNotFoundException("User with id = " + id +
                 " doesn't exist " + UserServiceImpl.class.getSimpleName()));
         userDao.updateUser(updatedUser);
-        return userDao.getUserById(updatedUser.getId());
+        return userDao.getUserById(updatedUser.getId())
+                .orElseThrow(() -> new ObjectNotFoundException("Updated user with id = " + id + " hasn't found in DB"));
     }
 
     @Override
-    public Optional<User> addFriend(Integer id, Integer friendId) {
+    public User addFriend(Integer id, Integer friendId) {
         checkUser(friendId);
         userDao.addFriend(id, friendId);
-        return userDao.getUserById(id);
+        return userDao.getUserById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " hasn't found"));
     }
 
     @Override
-    public Optional<User> deleteFriend(Integer id, Integer friendId) {
+    public User deleteFriend(Integer id, Integer friendId) {
         checkUser(friendId);
         userDao.deleteFriend(id, friendId);
-        return userDao.getUserById(id);
+        return userDao.getUserById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " hasn't found"));
     }
 
     @Override
     public List<User> showCommonFriends(Integer id, Integer otherId) {
-        return userDao.showCommonFriends(id, otherId);
+        return userDao.showCommonFriends(id, otherId)
+                .orElseThrow(() -> new ObjectNotFoundException("Users haven't found"));
     }
 
     @Override
     public List<User> showFriends(Integer id) {
-        return userDao.showFriends(id);
+        return userDao.showFriends(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Users haven't found"));
     }
 
     @Override
     public void checkUser(final Integer id) {
-        Optional<User> friend = findUserById(id);
-        friend.map(User::getId)
-                .orElseThrow(() -> new ObjectNotFoundException("User with id = " + id + " doesn't exist " +
-                        UserServiceImpl.class.getSimpleName()));
+        try {
+            findUserById(id);
+        } catch (ObjectNotFoundException e) {
+            throw new ObjectNotFoundException("User with id = " + id + " doesn't exist " +
+                    UserServiceImpl.class.getSimpleName());
+        }
     }
 
     private void validateUser(User user) {

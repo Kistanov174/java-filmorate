@@ -17,5 +17,5 @@ public interface FilmDao {
 
     void deleteLike(Integer id, Integer userId);
 
-    List<Film> showMostPopularFilms(Integer count);
+    Optional<List<Film>> showMostPopularFilms(Integer count);
 }

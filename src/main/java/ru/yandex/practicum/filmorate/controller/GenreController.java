@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.service.GenreService;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -19,13 +18,13 @@ public class GenreController {
     private final GenreService genreService;
 
     @GetMapping
-    public Optional<List<Genre>> getAllGenres() {
+    public List<Genre> getAllGenres() {
         log.info("Request to get all genres");
         return genreService.findAllGenres();
     }
 
     @GetMapping("/{id}")
-    public Optional<Genre> getGenreById(@PathVariable Integer id) {
+    public Genre getGenreById(@PathVariable Integer id) {
         log.info("Request to get genre by id");
         return genreService.findGenreById(id);
     }

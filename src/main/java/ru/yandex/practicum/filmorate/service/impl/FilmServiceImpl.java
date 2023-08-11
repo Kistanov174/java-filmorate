@@ -16,7 +16,6 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
 import javax.validation.Validator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -29,49 +28,55 @@ public class FilmServiceImpl implements FilmService {
     private static final int EXPECTED_SIZE = 1;
 
     @Override
-    public Optional<List<Film>> findAllFilms() {
-        return filmDao.getAllFilms();
+    public List<Film> findAllFilms() {
+        return filmDao.getAllFilms().orElseThrow(() -> new ObjectNotFoundException("Films haven't found"));
     }
 
     @Override
-    public Optional<Film> findFilmById(Integer id) {
-        return filmDao.getFilmById(id);
+    public Film findFilmById(Integer id) {
+        return filmDao.getFilmById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Film with id = " + id + " hasn't found"));
     }
 
     @Override
-    public Optional<Film> createFilm(@Valid Film film) {
+    public Film createFilm(@Valid Film film) {
         validateFilm(film);
         Integer id = filmDao.createFilm(film).orElseThrow(() -> new EmptyResultDataAccessException(EXPECTED_SIZE));
-        return filmDao.getFilmById(id);
+        return filmDao.getFilmById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Created film with id = " + id + " hasn't found in DB"));
     }
 
     @Override
-    public Optional<Film> updateFilm(@Valid Film film) {
+    public Film updateFilm(@Valid Film film) {
+        validateFilm(film);
         Integer id = film.getId();
         filmDao.getFilmById(id).orElseThrow(() -> new ObjectNotFoundException("Film with id = " + id +
                 " doesn't exist " + FilmController.class.getSimpleName()));
-        validateFilm(film);
         filmDao.updateFilm(film);
-        return filmDao.getFilmById(film.getId());
+        return filmDao.getFilmById(film.getId())
+                .orElseThrow(() -> new ObjectNotFoundException("Updated film with id = " + id + " hasn't found in DB"));
     }
 
     @Override
-    public Optional<Film> addLike(Integer id, Integer userId) {
+    public Film addLike(Integer id, Integer userId) {
         userService.checkUser(userId);
         filmDao.addLike(id, userId);
-        return filmDao.getFilmById(id);
+        return filmDao.getFilmById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Film with id = " + id + " hasn't found"));
     }
 
     @Override
-    public Optional<Film> deleteLike(Integer id, Integer userId) {
+    public Film deleteLike(Integer id, Integer userId) {
         userService.checkUser(userId);
         filmDao.deleteLike(id, userId);
-        return filmDao.getFilmById(id);
+        return filmDao.getFilmById(id)
+                .orElseThrow(() -> new ObjectNotFoundException("Film with id = " + id + " hasn't found"));
     }
 
     @Override
     public List<Film> showMostPopularFilms(Integer count) {
-        return filmDao.showMostPopularFilms(count);
+        return filmDao.showMostPopularFilms(count)
+                .orElseThrow(() -> new ObjectNotFoundException("Films haven't found"));
     }
 
     private void validateFilm(Film film) {

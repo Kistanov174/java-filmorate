@@ -17,7 +17,7 @@ public interface UserDao {
 
     void deleteFriend(Integer id, Integer friendId);
 
-    List<User> showCommonFriends(Integer id, Integer otherId);
+    Optional<List<User>> showCommonFriends(Integer id, Integer otherId);
 
-    List<User> showFriends(Integer id);
+    Optional<List<User>> showFriends(Integer id);
 }
